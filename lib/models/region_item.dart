@@ -29,6 +29,8 @@ class RegionItem {
     required this.applyEnd,
     required this.source,
     required this.sourceUrl,
+    this.eventDate,
+    this.eventEnd,
   });
 
   final ItemType type;
@@ -44,6 +46,8 @@ class RegionItem {
   final String? applyEnd;
   final String source;
   final String? sourceUrl;
+  final String? eventDate; // "YYYY-MM-DD"; events only
+  final String? eventEnd;
 
   bool get hasPhone => phone != null && phone!.trim().isNotEmpty;
 
@@ -69,8 +73,27 @@ class RegionItem {
       applyEnd: str('applyEnd'),
       source: json['source'] as String,
       sourceUrl: str('sourceUrl'),
+      eventDate: str('eventDate'),
+      eventEnd: str('eventEnd'),
     );
   }
+}
+
+/// How many 복지관 in a region the crawler actually covers, from the
+/// pipeline's coverage.json (`regions.{code}.centersTotal/centersCovered`).
+class RegionCoverage {
+  const RegionCoverage({
+    required this.centersTotal,
+    required this.centersCovered,
+  });
+
+  final int centersTotal;
+  final int centersCovered;
+
+  factory RegionCoverage.fromJson(Map<String, dynamic> json) => RegionCoverage(
+    centersTotal: json['centersTotal'] as int,
+    centersCovered: json['centersCovered'] as int,
+  );
 }
 
 /// Top-level feed for one region.
@@ -82,6 +105,7 @@ class RegionFeed {
     required this.generatedAt,
     required this.items,
     this.fromCache = false,
+    this.coverage,
   });
 
   final int schemaVersion;
@@ -94,6 +118,10 @@ class RegionFeed {
   /// Runtime-only; not part of the JSON schema.
   final bool fromCache;
 
+  /// 복지관 커버리지 for this region (events only). Runtime-only; filled from
+  /// the separate coverage.json, not part of the feed JSON schema.
+  final RegionCoverage? coverage;
+
   factory RegionFeed.fromJson(Map<String, dynamic> json) {
     final version = json['schemaVersion'] as int;
     if (version != 1) {
@@ -102,7 +130,9 @@ class RegionFeed {
     return RegionFeed(
       schemaVersion: version,
       regionCode: json['regionCode'] as String,
-      regionName: json['regionName'] as String,
+      // Event feeds carry no regionName; the UI resolves it from
+      // RegionRepository anyway.
+      regionName: json['regionName'] as String? ?? '',
       generatedAt: DateTime.parse(json['generatedAt'] as String),
       items: (json['items'] as List<dynamic>)
           .map((e) => RegionItem.fromJson(e as Map<String, dynamic>))
@@ -110,12 +140,17 @@ class RegionFeed {
     );
   }
 
-  RegionFeed copyWith({List<RegionItem>? items, bool? fromCache}) => RegionFeed(
+  RegionFeed copyWith({
+    List<RegionItem>? items,
+    bool? fromCache,
+    RegionCoverage? coverage,
+  }) => RegionFeed(
     schemaVersion: schemaVersion,
     regionCode: regionCode,
     regionName: regionName,
     generatedAt: generatedAt,
     items: items ?? this.items,
     fromCache: fromCache ?? this.fromCache,
+    coverage: coverage ?? this.coverage,
   );
 }

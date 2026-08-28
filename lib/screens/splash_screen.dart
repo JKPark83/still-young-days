@@ -34,7 +34,10 @@ class _SplashScreenState extends State<SplashScreen> {
     final List<Object?> results;
     try {
       results = await Future.wait<Object?>([
-        deps.items.fetchItems(deps.settings.regionCode.value),
+        deps.items.fetchItems(
+          deps.settings.regionCode.value,
+          kind: deps.settings.lastKind.value,
+        ),
         Future<void>.delayed(const Duration(seconds: 1)),
       ]);
     } on Object {

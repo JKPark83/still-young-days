@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../models/region_item.dart';
+
 /// Persists the four user settings. Each value is a [ValueNotifier] so the
 /// app root (text scale) and the home screen (region) can rebuild on change.
 class SettingsStore {
@@ -11,6 +13,7 @@ class SettingsStore {
   static const String keyTextScale = 'textScale';
   static const String keyNotifyOn = 'notifyOn';
   static const String keyOnboarded = 'onboarded';
+  static const String keyLastKind = 'lastKind';
 
   static const String defaultRegionCode = '41570'; // 김포시 (P1 hard-coded)
 
@@ -30,6 +33,11 @@ class SettingsStore {
   );
   late final ValueNotifier<bool> onboarded = ValueNotifier(
     _prefs.getBool(keyOnboarded) ?? false,
+  );
+
+  /// Which home tab the user saw last: 일자리 (default) or 복지관 행사.
+  late final ValueNotifier<ItemType> lastKind = ValueNotifier(
+    _prefs.getString(keyLastKind) == 'event' ? ItemType.event : ItemType.job,
   );
 
   static Future<SettingsStore> load() async =>
@@ -55,5 +63,10 @@ class SettingsStore {
   Future<void> setOnboarded(bool done) async {
     onboarded.value = done;
     await _prefs.setBool(keyOnboarded, done);
+  }
+
+  Future<void> setLastKind(ItemType kind) async {
+    lastKind.value = kind;
+    await _prefs.setString(keyLastKind, kind.name);
   }
 }

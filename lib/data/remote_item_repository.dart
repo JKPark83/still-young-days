@@ -19,12 +19,16 @@ class FeedException implements Exception {
   String toString() => 'FeedException($statusCode): $message';
 }
 
-/// Fetches `{baseUrl}/jobs/{code}.json` produced by the data pipeline.
+/// Fetches `{baseUrl}/jobs/{code}.json` (or `events/{code}.json` for the
+/// 복지관 행사 kind) produced by the data pipeline.
 ///
 /// - 200 → parse, store body + ETag in [cache]
 /// - 304 → serve the cached body
 /// - any other status, timeout or socket error → cached body if present
 ///   (marked [RegionFeed.fromCache]), otherwise [FeedException]
+///
+/// Event feeds also carry the region's 복지관 커버리지 from the pipeline's
+/// coverage.json; its failure never fails the feed (coverage is just null).
 class RemoteItemRepository implements ItemRepository {
   RemoteItemRepository({
     required this.baseUrl,
@@ -40,16 +44,81 @@ class RemoteItemRepository implements ItemRepository {
   final Duration timeout;
   final http.Client _client;
 
-  Uri uriFor(String code) => baseUrl.resolve('jobs/$code.json');
+  Uri uriFor(String code, [ItemType kind = ItemType.job]) => baseUrl.resolve(
+    kind == ItemType.event ? 'events/$code.json' : 'jobs/$code.json',
+  );
+
+  /// Jobs keep the bare region code so pre-P4 cache files stay valid;
+  /// events get their own key (and therefore their own cache file).
+  static String _cacheKey(String code, ItemType kind) =>
+      kind == ItemType.event ? 'events_$code' : code;
+
+  static const String _coverageKey = 'coverage';
 
   @override
-  Future<RegionFeed> fetchItems(String regionCode) async {
-    final etag = await cache.etag(regionCode);
-    http.Response res;
+  Future<RegionFeed> fetchItems(
+    String regionCode, {
+    ItemType kind = ItemType.job,
+  }) async {
+    final feed = await _fetchFeed(regionCode, kind);
+    if (kind != ItemType.event) return feed;
+    return feed.copyWith(coverage: await _fetchCoverage(regionCode));
+  }
+
+  Future<RegionFeed> _fetchFeed(String regionCode, ItemType kind) async {
+    final key = _cacheKey(regionCode, kind);
+    final res = await _get(uriFor(regionCode, kind), await cache.etag(key));
+    if (res == null) return _fallback(key, 'network error');
+
+    if (res.statusCode == 304) {
+      final cached = await cache.read(key);
+      if (cached != null) return _parse(cached);
+      // ETag without body should not happen; recover by refetching plainly.
+      await cache.write(key, '', null);
+      return _fetchFeed(regionCode, kind);
+    }
+    if (res.statusCode == 200) {
+      // Never res.body: it guesses latin-1 when charset is missing.
+      final body = utf8.decode(res.bodyBytes);
+      final feed = _parse(body);
+      await cache.write(key, body, res.headers['etag']);
+      return feed;
+    }
+    return _fallback(key, 'HTTP ${res.statusCode}', statusCode: res.statusCode);
+  }
+
+  /// Region's entry in coverage.json, cached like a feed. Any failure —
+  /// network, missing file, missing region — degrades to null.
+  Future<RegionCoverage?> _fetchCoverage(String regionCode) async {
+    String? body;
+    final res = await _get(
+      baseUrl.resolve('coverage.json'),
+      await cache.etag(_coverageKey),
+    );
+    if (res != null && res.statusCode == 200) {
+      body = utf8.decode(res.bodyBytes);
+      await cache.write(_coverageKey, body, res.headers['etag']);
+    } else {
+      body = await cache.read(_coverageKey);
+    }
+    if (body == null || body.isEmpty) return null;
     try {
-      res = await _client
+      final json = jsonDecode(body) as Map<String, dynamic>;
+      final region =
+          (json['regions'] as Map<String, dynamic>?)?[regionCode]
+              as Map<String, dynamic>?;
+      return region == null ? null : RegionCoverage.fromJson(region);
+    } on Object {
+      return null;
+    }
+  }
+
+  /// GET with the shared headers; null on timeout/socket/client errors.
+  Future<http.Response?> _get(Uri uri, String? etag) async {
+    try {
+      return await _client
           .get(
-            uriFor(regionCode),
+            uri,
             headers: {
               'If-None-Match': ?etag,
               if (readToken != null) 'Authorization': 'token $readToken',
@@ -57,40 +126,20 @@ class RemoteItemRepository implements ItemRepository {
           )
           .timeout(timeout);
     } on TimeoutException {
-      return _fallback(regionCode, 'timeout');
-    } on SocketException catch (e) {
-      return _fallback(regionCode, e.message);
-    } on http.ClientException catch (e) {
-      return _fallback(regionCode, e.message);
+      return null;
+    } on SocketException {
+      return null;
+    } on http.ClientException {
+      return null;
     }
-
-    if (res.statusCode == 304) {
-      final cached = await cache.read(regionCode);
-      if (cached != null) return _parse(cached);
-      // ETag without body should not happen; recover by refetching plainly.
-      await cache.write(regionCode, '', null);
-      return fetchItems(regionCode);
-    }
-    if (res.statusCode == 200) {
-      // Never res.body: it guesses latin-1 when charset is missing.
-      final body = utf8.decode(res.bodyBytes);
-      final feed = _parse(body);
-      await cache.write(regionCode, body, res.headers['etag']);
-      return feed;
-    }
-    return _fallback(
-      regionCode,
-      'HTTP ${res.statusCode}',
-      statusCode: res.statusCode,
-    );
   }
 
   Future<RegionFeed> _fallback(
-    String code,
+    String cacheKey,
     String reason, {
     int? statusCode,
   }) async {
-    final cached = await cache.read(code);
+    final cached = await cache.read(cacheKey);
     if (cached != null && cached.isNotEmpty) {
       return _parse(cached).copyWith(fromCache: true);
     }

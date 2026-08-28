@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "regionCode": "41570",
+  "generatedAt": "2026-08-28T03:00:00Z",
+  "items": [
+    {
+      "type": "event",
+      "id": "center:gyeonggi-040:9001",
+      "title": "가을 나들이 참가자 모집",
+      "place": "김포시노인종합복지관",
+      "address": "경기도 김포시 사우중로 62",
+      "phone": "031-997-9300",
+      "org": "김포시노인종합복지관",
+      "description": "가을을 맞아 함께 나들이를 갑니다. 점심과 차편을 준비했어요. 복지관에 전화하거나 방문해서 신청하세요.",
+      "eventDate": "2026-09-07",
+      "eventEnd": null,
+      "applyStart": "2026-08-25",
+      "source": "crawl",
+      "sourceUrl": "https://gimposenior.org/bbs/board.php?bo_table=0501&wr_id=9001"
+    },
+    {
+      "type": "event",
+      "id": "center:gyeonggi-040:9002",
+      "title": "노래 교실 2기 안내",
+      "place": "김포시노인종합복지관",
+      "address": null,
+      "phone": "031-997-9300",
+      "org": "김포시노인종합복지관",
+      "description": "매주 화요일 오전에 노래 교실이 열립니다. 9월 15일부터 12월 8일까지 진행해요.",
+      "eventDate": "2026-09-15",
+      "eventEnd": "2026-12-08",
+      "applyStart": null,
+      "source": "crawl",
+      "sourceUrl": "https://gimposenior.org/bbs/board.php?bo_table=0501&wr_id=9002"
+    },
+    {
+      "type": "event",
+      "id": "center:gyeonggi-040:9003",
+      "title": "복지관 이용 안내",
+      "place": "김포시노인종합복지관",
+      "address": null,
+      "phone": "031-997-9300",
+      "org": "김포시노인종합복지관",
+      "description": "복지관 이용 시간과 프로그램을 안내해 드립니다.",
+      "eventDate": null,
+      "eventEnd": null,
+      "applyStart": null,
+      "source": "crawl",
+      "sourceUrl": "https://gimposenior.org/bbs/board.php?bo_table=0501&wr_id=9003"
+    },
+    {
+      "type": "event",
+      "id": "center:gyeonggi-041:9004",
+      "title": "건강 체조 발표회",
+      "place": "김포시니어복지센터",
+      "address": "경기도 김포시 김포한강1로",
+      "phone": null,
+      "org": "김포시니어복지센터",
+      "description": "어르신들이 준비한 건강 체조 발표회에 놀러 오세요.",
+      "eventDate": "2026-09-21",
+      "eventEnd": null,
+      "applyStart": null,
+      "source": "crawl",
+      "sourceUrl": null
+    }
+  ]
+}

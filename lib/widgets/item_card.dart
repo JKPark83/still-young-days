@@ -2,11 +2,14 @@ import 'package:flutter/material.dart';
 
 import '../models/region_item.dart';
 import '../theme/tokens.dart';
+import '../utils/korean_date.dart';
 import 'big_button.dart';
 import 'surface_card.dart';
 
 /// Home card: title (wraps, never ellipsised) · 장소 · phone button.
-/// Tapping the card body opens the detail screen.
+/// 행사 cards swap the 장소 block for one line of "날짜 · 복지관"
+/// (복지관 only when the post has no date). Tapping the card body opens
+/// the detail screen.
 class ItemCard extends StatelessWidget {
   const ItemCard({
     super.key,
@@ -21,12 +24,27 @@ class ItemCard extends StatelessWidget {
 
   static const String hint = '카드를 누르면 자세히 볼 수 있어요';
 
+  bool get _isEvent => item.type == ItemType.event;
+
+  /// "9월 7일 (월) · 김포시노인종합복지관"; 복지관 only when the post has
+  /// no date, null when neither is known.
+  String? get eventLine {
+    final name = item.place ?? item.org;
+    final date = item.eventDate == null
+        ? null
+        : formatKoreanDate(item.eventDate!);
+    if (date == null) return name;
+    return name == null ? date : '$date · $name';
+  }
+
   @override
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme;
     return Semantics(
       container: true,
-      label: '일자리 카드. ${item.title}. ${item.place ?? ''}. 누르면 자세히 봅니다.',
+      label:
+          '${_isEvent ? '행사' : '일자리'} 카드. ${item.title}. '
+          '${(_isEvent ? eventLine : item.place) ?? ''}. 누르면 자세히 봅니다.',
       // The whole card scrolls when large text makes it taller than the
       // viewport; at normal sizes it fills the available height.
       child: SurfaceCard(
@@ -65,7 +83,28 @@ class ItemCard extends StatelessWidget {
                     maxLines: null,
                     overflow: TextOverflow.visible,
                   ),
-                  if (item.place != null) ...[
+                  if (_isEvent && eventLine != null) ...[
+                    const SizedBox(height: Tokens.gap),
+                    Container(
+                      padding: const EdgeInsets.only(top: Tokens.gap),
+                      decoration: const BoxDecoration(
+                        border: Border(
+                          top: BorderSide(
+                            color: Tokens.divider,
+                            width: Tokens.borderWidth,
+                          ),
+                        ),
+                      ),
+                      child: Text(
+                        eventLine!,
+                        style: text.bodyLarge!.copyWith(
+                          fontSize: Tokens.bodyLarge,
+                        ),
+                        maxLines: null,
+                        overflow: TextOverflow.visible,
+                      ),
+                    ),
+                  ] else if (!_isEvent && item.place != null) ...[
                     const SizedBox(height: Tokens.gap),
                     Container(
                       padding: const EdgeInsets.only(top: Tokens.gap),

@@ -19,12 +19,15 @@ class _ScriptedRepository implements ItemRepository {
   final bool fromCache;
 
   @override
-  Future<RegionFeed> fetchItems(String regionCode) async {
+  Future<RegionFeed> fetchItems(
+    String regionCode, {
+    ItemType kind = ItemType.job,
+  }) async {
     if (failuresBeforeSuccess > 0) {
       failuresBeforeSuccess--;
       throw const FeedException('offline');
     }
-    final feed = await _mock.fetchItems(regionCode);
+    final feed = await _mock.fetchItems(regionCode, kind: kind);
     return feed.copyWith(fromCache: fromCache);
   }
 }
