@@ -15,6 +15,7 @@ import 'package:still_young_days/data/region_repository.dart';
 import 'package:still_young_days/data/settings_store.dart';
 import 'package:still_young_days/location/location_service.dart';
 import 'package:still_young_days/location/region_locator.dart';
+import 'package:still_young_days/metrics/metrics.dart';
 import 'package:still_young_days/models/region_item.dart';
 
 /// Phone-sized logical viewport (360 x 780) for every widget test.
@@ -103,7 +104,14 @@ class FakeLocationService implements LocationService {
 
 /// Builds the full app with mock repositories, starting on [home]
 /// (or the splash when null).
-Future<({SettingsStore settings, FakePhone phone, MockItemRepository items})>
+Future<
+  ({
+    SettingsStore settings,
+    FakePhone phone,
+    MockItemRepository items,
+    Metrics metrics,
+  })
+>
 pumpApp(
   WidgetTester tester, {
   Widget? home,
@@ -117,6 +125,7 @@ pumpApp(
   // zone; a stale one never completes here and pumpAndSettle times out.
   rootBundle.clear();
   final settings = await freshSettings(initial: prefs);
+  final metrics = await Metrics.load();
   final phone = FakePhone();
   final mockItems = MockItemRepository();
   await tester.pumpWidget(
@@ -130,13 +139,14 @@ pumpApp(
         regionLocator: RegionLocator(bundle: FakeGeoBundle()),
         neighbors: NeighborRepository(),
         launchPhone: phone.launch,
+        metrics: metrics,
         // Fixed clock: the mock feed is dated 2026-08-28, keep it "fresh".
         clock: () => now ?? DateTime.utc(2026, 8, 28, 4),
         home: home,
       ),
     ),
   );
-  return (settings: settings, phone: phone, items: mockItems);
+  return (settings: settings, phone: phone, items: mockItems, metrics: metrics);
 }
 
 RegionItem sampleItem({
