@@ -3,7 +3,7 @@
 #  1) dart format으로 자동 포맷
 #  2) dart analyze를 돌려 문제가 있으면 exit 2로 Claude에게 알린다.
 # 패키지 해석이 준비 안 된 상태(.dart_tool 없음)면 analyze는 건너뛴다(가짜 오류 방지).
-export PATH="$HOME/development/flutter/bin:$PATH"
+export PATH="/opt/homebrew/bin:$HOME/development/flutter/bin:$PATH"
 
 file_path=$(jq -r '.tool_input.file_path // empty')
 [[ "$file_path" == *.dart && -f "$file_path" ]] || exit 0

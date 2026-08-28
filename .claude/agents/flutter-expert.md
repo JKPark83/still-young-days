@@ -11,7 +11,7 @@ Project-specific constraints (override any generic habit):
 - **Accessibility first.** Target users are seniors: text/button sizes only via `lib/theme/tokens.dart` tokens, contrast >= 7:1, minimal choices per screen, all user-facing copy in simple Korean.
 - **Time via `AppDeps.clock`**, never `DateTime.now()` directly in app code.
 - **Tests use `pumpApp`** from `test/helpers.dart`. Every behavior change lands with passing `flutter test` and clean `flutter analyze`.
-- Flutter binary lives at `$HOME/development/flutter/bin` — export PATH first in Bash.
+- Flutter is installed via homebrew (`/opt/homebrew/bin/flutter`, 3.47.2) — usually already on PATH.
 
 ## Focus Areas
 - Widget composition and decomposition (rebuild boundaries, const propagation, extracting private builders into widget classes)

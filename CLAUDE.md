@@ -3,14 +3,14 @@
 ## 프로젝트 개요
 
 **오늘도청춘 (Still Young Days)** — 70대 어르신을 위한 내 동네 노인 일자리 알림 Flutter 앱.
-P1(목 JSON 기반 7화면 UI) 완료, P2(실데이터 연결) 진행 중. 상세 계획은 `docs/plan/`, 아이디어 원문은 `ideas/`, P1 인수인계는 `docs/handoff/` 참고. 데이터 파이프라인은 별도 리포(`~/myworkspace/still-young-days-data`).
+P1(목 JSON 기반 7화면 UI) 완료, P2(실데이터 연결) 진행 중. 상세 계획은 `docs/plan/`, 아이디어 원문은 `ideas/`, P1 인수인계는 `docs/handoff/` 참고. 데이터 파이프라인은 별도 리포(`~/my-toy/still-young-days-data`, GitHub `JKPark83/still-young-days-data`).
 
 ## 실행·검증 명령
 
 ```bash
-# 주의(2026-08-28 기준): 이 Mac에는 README의 ~/development/flutter(3.47.2)가 없고
-# homebrew Flutter 3.41.7(Dart 3.11.5)만 있어 pubspec 요구(^3.13.2)보다 낮다.
-# 빌드/테스트 전에 Flutter 3.47.2+ 설치 또는 업그레이드가 필요하다.
+# 이 Mac의 Flutter는 homebrew로 설치됨(/opt/homebrew/bin/flutter, 3.47.2) — PATH 설정 불필요.
+# iOS 빌드에서 impellerc가 Gatekeeper에 막히면:
+#   xattr -dr com.apple.quarantine /opt/homebrew/share/flutter/bin/cache/artifacts/engine
 flutter pub get
 flutter analyze        # 경고 0 유지
 flutter test           # 전체 테스트 통과 유지 (현재 53건)
@@ -19,7 +19,7 @@ flutter run -d <device> --dart-define=FEED_BASE_URL=https://<host>/data/   # 실
 ```
 
 - `FEED_BASE_URL` 없으면 `MockItemRepository`, 있으면 `RemoteItemRepository`(+`FeedCache` 파일 캐시).
-- 이 Mac의 Android 에뮬레이터는 VM이 멈추는 문제가 있어 육안 검수는 실기기로 한다.
+- 에뮬레이터: API 29/34 arm64는 VM이 멈췄지만, API 36 이미지 + 에뮬레이터 37.1.11(AVD `syd_api36`)은 정상 동작(2026-08-28 확인). iOS 시뮬레이터도 사용 가능.
 
 ## 아키텍처
 

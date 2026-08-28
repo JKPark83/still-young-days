@@ -2,11 +2,12 @@
 
 70대 어르신용 동네 일자리 앱. P1(목 JSON 7화면) 완료, P2(실데이터 연결) 진행 중.
 기획: `docs/plan/` (`*p1-ui-mock*`, `*p2-data-pipeline*`), 아이디어: `ideas/`
-데이터 파이프라인: `~/myworkspace/still-young-days-data`
+데이터 파이프라인: `~/my-toy/still-young-days-data` (GitHub `JKPark83/still-young-days-data`, private)
 
 ## 실행
 ```bash
-export PATH="$HOME/development/flutter/bin:$PATH"   # Flutter 3.47.2 (~/.zshrc에도 추가됨)
+# Flutter 3.47.2 — 이 Mac은 homebrew 설치(/opt/homebrew/bin/flutter)라 PATH 설정이 필요 없다.
+# (~/development/flutter 경로는 예전 Mac 기준. 없으면 `brew install flutter`)
 flutter pub get
 flutter analyze
 flutter test                       # 53건
@@ -40,4 +41,4 @@ P1 목 JSON 스키마(schemaVersion 1)는 P2 실데이터 계약과 동일하다
 - 전화: 카드·상세의 전화하기 → 번호 확인 화면(`CallConfirmScreen`) → `tel:` `launchUrl`. 실패 시 번호를 안내 배너에 표시. `debugPrint('metric:call_tap')`이 P3 지표 자리.
 - 사용법 화면은 와이어프레임 썸네일 대신 인라인 도식 위젯을 쓴다.
 - 날짜 헬퍼 예시: 2026-08-30은 **일요일**이다(계획서의 "(토)" 예시는 오기).
-- 에뮬레이터: 이 Mac에서 Android 에뮬레이터(API 29/34, arm64)가 어떤 앱을 띄워도 VM이 멈춰 육안 검수를 하지 못했다. 실기기 또는 다른 호스트에서 `flutter run`으로 확인 필요.
+- 에뮬레이터: 예전에는 Android 에뮬레이터(API 29/34, arm64)가 앱만 띄우면 VM이 멈췄지만, **2026-08-28 API 36 이미지(system-images;android-36;google_apis;arm64-v8a) + 에뮬레이터 37.1.11 조합(AVD `syd_api36`)에서는 정상 동작 확인**(온보딩→지역 선택→홈까지 완주). iOS 시뮬레이터(iPhone 17 Pro)도 정상. 첫 iOS 빌드에서 impellerc가 Gatekeeper에 막히면 `xattr -dr com.apple.quarantine /opt/homebrew/share/flutter/bin/cache/artifacts/engine`.
