@@ -51,7 +51,7 @@ class _RegionPickerScreenState extends State<RegionPickerScreen> {
       });
       return;
     }
-    await deps.settings.setRegionCode(code);
+    await deps.settings.setRegionCode(code, fromGps: true);
     if (!mounted) return;
     navigator.popUntil((route) => route.isFirst);
   }
