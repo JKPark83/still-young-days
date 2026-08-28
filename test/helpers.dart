@@ -34,12 +34,8 @@ Future<SettingsStore> freshSettings({Map<String, Object> initial = const {}}) {
 
 /// Builds the full app with mock repositories, starting on [home]
 /// (or the splash when null).
-Future<
-    ({
-      SettingsStore settings,
-      FakePhone phone,
-      MockItemRepository items,
-    })> pumpApp(
+Future<({SettingsStore settings, FakePhone phone, MockItemRepository items})>
+pumpApp(
   WidgetTester tester, {
   Widget? home,
   double osTextScale = 1.0,
@@ -75,22 +71,21 @@ RegionItem sampleItem({
   String? phone = '031-000-0001',
   String? age = '60세 이상',
   String? description = '공원을 정리하는 일이에요.',
-}) =>
-    RegionItem(
-      type: ItemType.job,
-      id: 'test:1',
-      title: title,
-      place: '김포시 사우동',
-      address: '경기도 김포시 사우동 123',
-      phone: phone,
-      org: '김포시니어클럽',
-      description: description,
-      age: age,
-      applyStart: '2026-08-25',
-      applyEnd: '2026-09-07',
-      source: 'test',
-      sourceUrl: null,
-    );
+}) => RegionItem(
+  type: ItemType.job,
+  id: 'test:1',
+  title: title,
+  place: '김포시 사우동',
+  address: '경기도 김포시 사우동 123',
+  phone: phone,
+  org: '김포시니어클럽',
+  description: description,
+  age: age,
+  applyStart: '2026-08-25',
+  applyEnd: '2026-09-07',
+  source: 'test',
+  sourceUrl: null,
+);
 
 /// Tallest render box among widgets matching [finder].
 double heightOf(WidgetTester tester, Finder finder) =>

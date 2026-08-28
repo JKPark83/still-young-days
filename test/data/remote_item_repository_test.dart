@@ -39,8 +39,11 @@ void main() {
     http.Request? seen;
     final client = MockClient((req) async {
       seen = req;
-      return http.Response.bytes(utf8.encode(_feedJson), 200,
-          headers: {'etag': '"v1"'});
+      return http.Response.bytes(
+        utf8.encode(_feedJson),
+        200,
+        headers: {'etag': '"v1"'},
+      );
     });
     final feed = await repo(client, token: 'tok').fetchItems('41570');
     expect(seen!.url.toString(), 'https://example.test/data/jobs/41570.json');
@@ -76,14 +79,18 @@ void main() {
     final client = MockClient((_) async => http.Response('boom', 500));
     expect(
       () => repo(client).fetchItems('41570'),
-      throwsA(isA<FeedException>()
-          .having((e) => e.statusCode, 'statusCode', 500)),
+      throwsA(
+        isA<FeedException>().having((e) => e.statusCode, 'statusCode', 500),
+      ),
     );
   });
 
   test('socket error without cache → FeedException', () async {
     final client = MockClient((_) async => throw const SocketException('down'));
-    expect(() => repo(client).fetchItems('41570'), throwsA(isA<FeedException>()));
+    expect(
+      () => repo(client).fetchItems('41570'),
+      throwsA(isA<FeedException>()),
+    );
   });
 
   test('timeout with cache → cached feed', () async {
@@ -100,8 +107,9 @@ void main() {
     final client = MockClient((_) async => http.Response('', 404));
     expect(
       () => repo(client).fetchItems('99999'),
-      throwsA(isA<FeedException>()
-          .having((e) => e.statusCode, 'statusCode', 404)),
+      throwsA(
+        isA<FeedException>().having((e) => e.statusCode, 'statusCode', 404),
+      ),
     );
   });
 }

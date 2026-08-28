@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 
 import '../theme/tokens.dart';
 
-/// Label + value row for the detail screen.
+/// Label + value block for the detail screen, separated by a hairline above.
 /// Callers must filter null/empty values out — this widget never renders
 /// a "정보 없음" placeholder.
 class InfoRow extends StatelessWidget {
   const InfoRow({super.key, required this.label, required this.value})
-      : assert(value != '', 'InfoRow must not be built with an empty value');
+    : assert(value != '', 'InfoRow must not be built with an empty value');
 
   final String label;
   final String value;
@@ -21,24 +21,24 @@ class InfoRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: Tokens.gap),
+    return Container(
+      padding: const EdgeInsets.only(top: Tokens.gap, bottom: Tokens.gap + 2),
+      decoration: const BoxDecoration(
+        border: Border(
+          top: BorderSide(color: Tokens.divider, width: Tokens.borderWidth),
+        ),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            label,
-            style: text.labelLarge!.copyWith(color: Tokens.primary),
-          ),
-          const SizedBox(height: Tokens.gap / 4),
+          Text(label, style: text.labelMedium),
+          const SizedBox(height: 6),
           Text(
             value,
-            style: text.bodyLarge,
+            style: text.bodyLarge!.copyWith(fontSize: Tokens.body + 1),
             maxLines: null,
             overflow: TextOverflow.visible,
           ),
-          const SizedBox(height: Tokens.gap / 2),
-          const Divider(thickness: 1, height: 1),
         ],
       ),
     );

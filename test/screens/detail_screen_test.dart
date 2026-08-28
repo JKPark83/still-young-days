@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:still_young_days/screens/call_confirm_screen.dart';
 import 'package:still_young_days/screens/detail_screen.dart';
 import 'package:still_young_days/widgets/big_button.dart';
 
@@ -20,8 +21,9 @@ void main() {
     expect(find.text('일하는 때'), findsNothing);
   });
 
-  testWidgets('call button >= 72dp and stays visible after scrolling',
-      (tester) async {
+  testWidgets('call button >= 72dp and stays visible after scrolling', (
+    tester,
+  ) async {
     usePhoneView(tester);
     final longText = List.filled(30, '이 문장은 스크롤을 만들기 위한 긴 설명이에요.').join(' ');
     final deps = await pumpApp(
@@ -39,24 +41,32 @@ void main() {
 
     await tester.tap(btn);
     await tester.pumpAndSettle();
+    expect(find.byType(CallConfirmScreen), findsOneWidget);
+    await tester.tap(find.widgetWithText(BigButton, '📞 전화 걸기'));
+    await tester.pumpAndSettle();
     expect(deps.phone.calls, ['031-000-0001']);
   });
 
-  testWidgets('phone null → permanent notice instead of button', (tester) async {
+  testWidgets('phone null → permanent notice instead of button', (
+    tester,
+  ) async {
     usePhoneView(tester);
     await pumpApp(tester, home: DetailScreen(item: sampleItem(phone: null)));
     await tester.pumpAndSettle();
     expect(find.text('📞 전화하기'), findsNothing);
-    expect(find.text('이 일자리는 전화번호가 없어요.'), findsOneWidget);
+    expect(find.text('전화번호가 없어요'), findsOneWidget);
   });
 
-  testWidgets('failed launch shows the number in a persistent notice',
-      (tester) async {
+  testWidgets('failed launch shows the number in a persistent notice', (
+    tester,
+  ) async {
     usePhoneView(tester);
     final deps = await pumpApp(tester, home: DetailScreen(item: sampleItem()));
     deps.phone.succeed = false;
     await tester.pumpAndSettle();
     await tester.tap(find.widgetWithText(BigButton, '📞 전화하기'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(BigButton, '📞 전화 걸기'));
     await tester.pumpAndSettle();
     expect(find.text('전화를 걸 수 없어요. 번호: 031-000-0001'), findsOneWidget);
   });

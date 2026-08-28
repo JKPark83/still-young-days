@@ -15,14 +15,18 @@ class SettingsStore {
 
   final SharedPreferences _prefs;
 
-  late final ValueNotifier<String> regionCode =
-      ValueNotifier(_prefs.getString(keyRegionCode) ?? defaultRegionCode);
-  late final ValueNotifier<double> textScale =
-      ValueNotifier(_prefs.getDouble(keyTextScale) ?? 1.0);
-  late final ValueNotifier<bool> notifyOn =
-      ValueNotifier(_prefs.getBool(keyNotifyOn) ?? true);
-  late final ValueNotifier<bool> onboarded =
-      ValueNotifier(_prefs.getBool(keyOnboarded) ?? false);
+  late final ValueNotifier<String> regionCode = ValueNotifier(
+    _prefs.getString(keyRegionCode) ?? defaultRegionCode,
+  );
+  late final ValueNotifier<double> textScale = ValueNotifier(
+    _prefs.getDouble(keyTextScale) ?? 1.0,
+  );
+  late final ValueNotifier<bool> notifyOn = ValueNotifier(
+    _prefs.getBool(keyNotifyOn) ?? true,
+  );
+  late final ValueNotifier<bool> onboarded = ValueNotifier(
+    _prefs.getBool(keyOnboarded) ?? false,
+  );
 
   static Future<SettingsStore> load() async =>
       SettingsStore._(await SharedPreferences.getInstance());

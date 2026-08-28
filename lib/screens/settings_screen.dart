@@ -4,11 +4,14 @@ import '../app_deps.dart';
 import '../theme/tokens.dart';
 import '../widgets/back_bar.dart';
 import '../widgets/big_button.dart';
+import '../widgets/list_row.dart';
 import '../widgets/region_name.dart';
+import '../widgets/screen_title.dart';
+import '../widgets/surface_card.dart';
 import 'howto_screen.dart';
 import 'region_picker_screen.dart';
 
-/// Screen 5. Four rows, each at least 64dp tall.
+/// Screen 5. Four 82dp rows in one white card; the switch shows 켜짐/꺼짐 text.
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
 
@@ -21,53 +24,59 @@ class SettingsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final settings = AppDeps.of(context).settings;
+    void push(Widget screen) =>
+        Navigator.of(context)
+            .push(MaterialPageRoute<void>(builder: (_) => screen));
     return Scaffold(
-      appBar: const BackBar(title: '설정'),
+      appBar: const BackBar(),
       body: ListView(
-        padding: const EdgeInsets.all(Tokens.pagePadding),
+        padding: const EdgeInsets.fromLTRB(
+          Tokens.pagePadding,
+          0,
+          Tokens.pagePadding,
+          Tokens.cardPadding,
+        ),
         children: [
-          ValueListenableBuilder<String>(
-            valueListenable: settings.regionCode,
-            builder: (context, code, _) => RegionName(
-              code: code,
-              builder: (context, name) => _SettingsRow(
-                title: '내 동네 바꾸기',
-                value: name,
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (_) => const RegionPickerScreen(),
+          const ScreenTitle('설정'),
+          const SizedBox(height: 2),
+          SurfaceCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                ValueListenableBuilder<String>(
+                  valueListenable: settings.regionCode,
+                  builder: (context, code, _) => RegionName(
+                    code: code,
+                    builder: (context, name) => ListRow(
+                      title: '내 동네 바꾸기',
+                      value: name,
+                      onTap: () => push(const RegionPickerScreen()),
+                    ),
                   ),
                 ),
-              ),
-            ),
-          ),
-          ValueListenableBuilder<double>(
-            valueListenable: settings.textScale,
-            builder: (context, scale, _) => _SettingsRow(
-              title: '글자 크기',
-              value: scaleLabel(scale),
-              onTap: () => Navigator.of(context).push(
-                MaterialPageRoute<void>(builder: (_) => const TextSizeScreen()),
-              ),
-            ),
-          ),
-          ValueListenableBuilder<bool>(
-            valueListenable: settings.notifyOn,
-            builder: (context, on, _) => _SettingsRow(
-              title: '알림 받기',
-              value: on ? '켜짐' : '꺼짐',
-              trailing: Switch(
-                value: on,
-                onChanged: (v) => settings.setNotifyOn(v),
-              ),
-              onTap: () => settings.setNotifyOn(!on),
-            ),
-          ),
-          _SettingsRow(
-            title: '앱 사용법',
-            value: '',
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute<void>(builder: (_) => const HowToScreen()),
+                ValueListenableBuilder<double>(
+                  valueListenable: settings.textScale,
+                  builder: (context, scale, _) => ListRow(
+                    title: '글자 크기',
+                    value: scaleLabel(scale),
+                    onTap: () => push(const TextSizeScreen()),
+                  ),
+                ),
+                ValueListenableBuilder<bool>(
+                  valueListenable: settings.notifyOn,
+                  builder: (context, on, _) => ListRow(
+                    title: '알림 받기',
+                    value: on ? '켜짐' : '꺼짐',
+                    trailing: BigSwitch(value: on),
+                    onTap: () => settings.setNotifyOn(!on),
+                  ),
+                ),
+                ListRow(
+                  title: '앱 사용법',
+                  last: true,
+                  onTap: () => push(const HowToScreen()),
+                ),
+              ],
             ),
           ),
         ],
@@ -76,68 +85,36 @@ class SettingsScreen extends StatelessWidget {
   }
 }
 
-class _SettingsRow extends StatelessWidget {
-  const _SettingsRow({
-    required this.title,
-    required this.value,
-    required this.onTap,
-    this.trailing,
-  });
+/// 78×44 ink-outlined toggle. Purely visual; the enclosing row handles taps
+/// and announces 켜짐/꺼짐 in its semantics label.
+class BigSwitch extends StatelessWidget {
+  const BigSwitch({super.key, required this.value});
 
-  final String title;
-  final String value;
-  final VoidCallback onTap;
-  final Widget? trailing;
+  final bool value;
 
   @override
   Widget build(BuildContext context) {
-    final text = Theme.of(context).textTheme;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: Tokens.gap),
-      child: Semantics(
-        button: true,
-        label: value.isEmpty ? title : '$title, 현재 $value',
-        child: Material(
-          color: Tokens.bg,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(Tokens.radius),
-            side: const BorderSide(color: Tokens.fg, width: Tokens.borderWidth),
+    return ExcludeSemantics(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        width: 78,
+        height: 44,
+        padding: const EdgeInsets.all(3),
+        alignment: value ? Alignment.centerRight : Alignment.centerLeft,
+        decoration: BoxDecoration(
+          color: value ? Tokens.ink : Tokens.cardBg,
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(
+            color: Tokens.ink,
+            width: Tokens.borderWidthStrong,
           ),
-          child: InkWell(
-            onTap: onTap,
-            borderRadius: BorderRadius.circular(Tokens.radius),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(minHeight: Tokens.buttonMin),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: Tokens.gap,
-                  vertical: Tokens.gap / 2,
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(title, style: text.labelLarge),
-                          if (value.isNotEmpty)
-                            Text(
-                              value,
-                              style: text.bodyLarge!.copyWith(color: Tokens.primary),
-                            ),
-                        ],
-                      ),
-                    ),
-                    if (trailing != null) ...[
-                      Transform.scale(scale: 1.4, child: trailing),
-                      const SizedBox(width: Tokens.gap),
-                    ],
-                    Text('▶', style: text.labelLarge!.copyWith(color: Tokens.primary)),
-                  ],
-                ),
-              ),
-            ),
+        ),
+        child: Container(
+          width: 32,
+          height: 32,
+          decoration: BoxDecoration(
+            color: value ? Tokens.onInk : Tokens.ink,
+            shape: BoxShape.circle,
           ),
         ),
       ),
@@ -145,40 +122,54 @@ class _SettingsRow extends StatelessWidget {
   }
 }
 
-/// Sub-screen of settings: three text-size choices.
+/// Sub-screen of settings: three text-size choices, each label previewed at
+/// the size it would set.
 class TextSizeScreen extends StatelessWidget {
   const TextSizeScreen({super.key});
+
+  static const _options = [
+    ('보통', Tokens.scaleNormal, 20.0),
+    ('크게', Tokens.scaleLarge, 26.0),
+    ('아주 크게', Tokens.scaleXLarge, 34.0),
+  ];
 
   @override
   Widget build(BuildContext context) {
     final settings = AppDeps.of(context).settings;
-    Widget choice(String label, double scale) => Padding(
-          padding: const EdgeInsets.only(bottom: Tokens.gap),
-          child: ValueListenableBuilder<double>(
-            valueListenable: settings.textScale,
-            builder: (context, current, _) {
-              final selected = SettingsScreen.scaleLabel(current) == label;
-              return BigButton(
-                label: selected ? '✔ $label (지금)' : label,
-                secondary: !selected,
-                onPressed: () async {
-                  await settings.setTextScale(scale);
-                  if (context.mounted) Navigator.of(context).maybePop();
-                },
-              );
-            },
-          ),
-        );
     return Scaffold(
-      appBar: const BackBar(title: '글자 크기'),
+      appBar: const BackBar(),
       body: ListView(
-        padding: const EdgeInsets.all(Tokens.pagePadding),
+        padding: const EdgeInsets.fromLTRB(
+          Tokens.pagePadding,
+          0,
+          Tokens.pagePadding,
+          Tokens.pagePadding + 4,
+        ),
         children: [
-          Text('글자 크기를 고르세요', style: Theme.of(context).textTheme.bodyLarge),
-          const SizedBox(height: Tokens.gap),
-          choice('보통', Tokens.scaleNormal),
-          choice('크게', Tokens.scaleLarge),
-          choice('아주 크게', Tokens.scaleXLarge),
+          const ScreenTitle('글자 크기'),
+          for (final (label, scale, size) in _options)
+            Padding(
+              padding: const EdgeInsets.only(bottom: Tokens.gap),
+              child: ValueListenableBuilder<double>(
+                valueListenable: settings.textScale,
+                builder: (context, current, _) {
+                  final selected = SettingsScreen.scaleLabel(current) == label;
+                  return BigButton(
+                    label: label,
+                    semanticsLabel: selected ? '$label, 지금 이것' : label,
+                    variant: ButtonVariant.card,
+                    minHeightOverride: 76,
+                    alignStart: true,
+                    fontSize: size,
+                    trailing: selected ? const InkChip('✔ 지금 이것') : null,
+                    onPressed: () async {
+                      await settings.setTextScale(scale);
+                      if (context.mounted) Navigator.of(context).maybePop();
+                    },
+                  );
+                },
+              ),
+            ),
         ],
       ),
     );

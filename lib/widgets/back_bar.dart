@@ -2,15 +2,18 @@ import 'package:flutter/material.dart';
 
 import '../theme/tokens.dart';
 
-/// Fixed top bar: a big "◀ 뒤로" button plus the screen title.
-/// Used as [Scaffold.appBar] so it never scrolls away.
+/// Fixed top bar holding only the big "◀ 뒤로" button (neutral, 64dp).
+/// Used as [Scaffold.appBar] so it never scrolls away. Screen headings are
+/// rendered in the body with [ScreenTitle].
 class BackBar extends StatelessWidget implements PreferredSizeWidget {
-  const BackBar({super.key, required this.title, this.onBack});
+  const BackBar({super.key, this.onBack, this.divider = false});
 
-  final String title;
   final VoidCallback? onBack;
 
-  static const double height = Tokens.buttonMin + Tokens.gap;
+  /// Hairline under the bar (detail screen).
+  final bool divider;
+
+  static const double height = Tokens.buttonMin + Tokens.gapSmall * 2;
 
   @override
   Size get preferredSize => const Size.fromHeight(height);
@@ -21,56 +24,65 @@ class BackBar extends StatelessWidget implements PreferredSizeWidget {
       color: Tokens.bg,
       child: SafeArea(
         bottom: false,
-        child: SizedBox(
+        child: Container(
           height: height,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: Tokens.pagePadding,
-              vertical: Tokens.gap / 2,
-            ),
-            child: Row(
-              children: [
-                Semantics(
-                  button: true,
-                  label: '뒤로 가기',
-                  child: OutlinedButton(
-                    onPressed: onBack ?? () => Navigator.of(context).maybePop(),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: Tokens.primary,
-                      backgroundColor: Tokens.bg,
-                      minimumSize: const Size(Tokens.buttonMin, Tokens.buttonMin),
-                      padding: const EdgeInsets.symmetric(horizontal: Tokens.gap),
-                      side: const BorderSide(
-                        color: Tokens.primary,
-                        width: Tokens.borderWidth,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(Tokens.radius),
-                      ),
-                    ),
-                    child: Text(
-                      '◀ 뒤로',
-                      style: Theme.of(context)
-                          .textTheme
-                          .labelLarge!
-                          .copyWith(color: Tokens.primary),
+          decoration: divider
+              ? const BoxDecoration(
+                  border: Border(
+                    bottom: BorderSide(
+                      color: Tokens.divider,
+                      width: Tokens.borderWidth,
                     ),
                   ),
-                ),
-                const SizedBox(width: Tokens.gap),
-                Expanded(
-                  child: Text(
-                    title,
-                    style: Theme.of(context).textTheme.titleLarge,
-                    maxLines: 2,
-                    overflow: TextOverflow.visible,
-                  ),
-                ),
-              ],
-            ),
+                )
+              : null,
+          padding: const EdgeInsets.symmetric(
+            horizontal: Tokens.pagePadding,
+            vertical: Tokens.gapSmall,
+          ),
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: BackButtonBig(onBack: onBack),
           ),
         ),
       ),
     );
+  }
+}
+
+/// The "◀ 뒤로" button on its own (home top row uses it inline).
+class BackButtonBig extends StatelessWidget {
+  const BackButtonBig({super.key, this.onBack, this.expand = false});
+
+  final VoidCallback? onBack;
+  final bool expand;
+
+  @override
+  Widget build(BuildContext context) {
+    final button = Semantics(
+      button: true,
+      label: '뒤로 가기',
+      child: FilledButton(
+        onPressed: onBack ?? () => Navigator.of(context).maybePop(),
+        style: FilledButton.styleFrom(
+          foregroundColor: Tokens.fg,
+          backgroundColor: Tokens.neutralBg,
+          minimumSize: const Size(Tokens.buttonMin, Tokens.buttonMin),
+          padding: const EdgeInsets.symmetric(
+            horizontal: Tokens.gap + 6,
+            vertical: Tokens.gapSmall,
+          ),
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(Tokens.radiusSmall),
+          ),
+        ),
+        child: Text(
+          '◀ 뒤로',
+          style: Theme.of(context).textTheme.labelLarge!.copyWith(height: 1.4),
+        ),
+      ),
+    );
+    return expand ? SizedBox(width: double.infinity, child: button) : button;
   }
 }

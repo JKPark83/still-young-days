@@ -24,7 +24,9 @@ Future<ItemRepository> buildItemRepository() async {
   if (feedBaseUrl.isEmpty) return MockItemRepository();
   final dir = await getApplicationDocumentsDirectory();
   return RemoteItemRepository(
-    baseUrl: Uri.parse(feedBaseUrl.endsWith('/') ? feedBaseUrl : '$feedBaseUrl/'),
+    baseUrl: Uri.parse(
+      feedBaseUrl.endsWith('/') ? feedBaseUrl : '$feedBaseUrl/',
+    ),
     cache: FeedCache(dir),
     readToken: feedReadToken.isEmpty ? null : feedReadToken,
   );

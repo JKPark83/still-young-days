@@ -7,12 +7,12 @@ class Sido {
   final List<Sigungu> sigungu;
 
   factory Sido.fromJson(Map<String, dynamic> json) => Sido(
-        code: json['code'] as String,
-        name: json['name'] as String,
-        sigungu: (json['sigungu'] as List<dynamic>)
-            .map((e) => Sigungu.fromJson(e as Map<String, dynamic>))
-            .toList(growable: false),
-      );
+    code: json['code'] as String,
+    name: json['name'] as String,
+    sigungu: (json['sigungu'] as List<dynamic>)
+        .map((e) => Sigungu.fromJson(e as Map<String, dynamic>))
+        .toList(growable: false),
+  );
 }
 
 class Sigungu {

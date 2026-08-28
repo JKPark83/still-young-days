@@ -7,13 +7,13 @@ import 'package:still_young_days/screens/settings_screen.dart';
 import '../helpers.dart';
 
 void main() {
-  testWidgets('app 1.6 × OS 1.3 clamps to 2.0', (tester) async {
+  testWidgets('app 2.0 × OS 1.3 clamps to 2.0', (tester) async {
     usePhoneView(tester);
     await pumpApp(
       tester,
       home: const SettingsScreen(),
       osTextScale: 1.3,
-      prefs: {'textScale': 1.6},
+      prefs: {'textScale': 2.0},
     );
     await tester.pumpAndSettle();
     final ctx = tester.element(find.byType(SettingsScreen));
@@ -21,8 +21,9 @@ void main() {
     expect(find.text('아주 크게'), findsOneWidget);
   });
 
-  testWidgets('home renders at 2.0 without RenderFlex overflow',
-      (tester) async {
+  testWidgets('home renders at 2.0 without RenderFlex overflow', (
+    tester,
+  ) async {
     usePhoneView(tester);
     await pumpApp(
       tester,
@@ -39,8 +40,9 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('detail renders at 2.0 without RenderFlex overflow',
-      (tester) async {
+  testWidgets('detail renders at 2.0 without RenderFlex overflow', (
+    tester,
+  ) async {
     usePhoneView(tester);
     await pumpApp(
       tester,
@@ -54,8 +56,9 @@ void main() {
     expect(find.text('📞 전화하기'), findsOneWidget);
   });
 
-  testWidgets('choosing 크게 in settings changes the scale immediately',
-      (tester) async {
+  testWidgets('choosing 크게 in settings changes the scale immediately', (
+    tester,
+  ) async {
     usePhoneView(tester);
     final deps = await pumpApp(tester, home: const SettingsScreen());
     await tester.pumpAndSettle();
@@ -63,8 +66,8 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('크게'));
     await tester.pumpAndSettle();
-    expect(deps.settings.textScale.value, 1.3);
+    expect(deps.settings.textScale.value, 1.4);
     final ctx = tester.element(find.byType(SettingsScreen));
-    expect(MediaQuery.textScalerOf(ctx).scale(10), closeTo(13, 0.01));
+    expect(MediaQuery.textScalerOf(ctx).scale(10), closeTo(14, 0.01));
   });
 }

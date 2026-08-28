@@ -7,23 +7,18 @@ import '../widgets/persistent_notice.dart';
 import 'home_screen.dart';
 import 'region_picker_screen.dart';
 
-/// Screen 2. P1 shell: no permission request. "내 위치로 찾기" shows a notice and
-/// continues with the default region; "직접 고를게요" opens the region picker.
-class LocationIntroScreen extends StatefulWidget {
+/// Screen 2. P1 shell: no permission request. "내 위치로 찾기" continues with the
+/// default region; "직접 고를게요" opens the region picker over home.
+class LocationIntroScreen extends StatelessWidget {
   const LocationIntroScreen({super.key});
 
-  @override
-  State<LocationIntroScreen> createState() => _LocationIntroScreenState();
-}
-
-class _LocationIntroScreenState extends State<LocationIntroScreen> {
-  String? _notice;
-
-  Future<void> _finish({required bool pickManually}) async {
+  Future<void> _finish(
+    BuildContext context, {
+    required bool pickManually,
+  }) async {
     final deps = AppDeps.of(context);
     final navigator = Navigator.of(context);
     await deps.settings.setOnboarded(true);
-    if (!mounted) return;
     navigator.pushReplacement(
       MaterialPageRoute<void>(builder: (_) => const HomeScreen()),
     );
@@ -40,47 +35,49 @@ class _LocationIntroScreenState extends State<LocationIntroScreen> {
     return Scaffold(
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(Tokens.pagePadding),
+          padding: const EdgeInsets.fromLTRB(
+            Tokens.pagePadding + 4,
+            28,
+            Tokens.pagePadding + 4,
+            Tokens.pagePadding + 4,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Expanded(
                 child: ListView(
                   children: [
-                    const SizedBox(height: Tokens.gap * 2),
-                    Text('어느 동네에 사시나요?', style: text.headlineMedium),
-                    const SizedBox(height: Tokens.gap),
-                    Text('가까운 일자리를 보여드리려고 해요.', style: text.bodyLarge),
-                    const SizedBox(height: Tokens.gap),
                     Text(
-                      '위치를 알려주지 않아도 동네를 직접 골라서 쓸 수 있어요.',
-                      style: text.bodyLarge,
+                      '어느 동네에\n사시나요?',
+                      style: text.headlineMedium!.copyWith(fontSize: 36),
                     ),
-                    if (_notice != null) ...[
-                      const SizedBox(height: Tokens.gap),
-                      PersistentNotice(
-                        text: _notice!,
-                        onClose: () => setState(() => _notice = null),
+                    const SizedBox(height: Tokens.gap + 4),
+                    Text(
+                      '가까운 일자리를 보여드리려고 해요',
+                      style: text.bodyLarge!.copyWith(
+                        fontSize: Tokens.body + 2,
                       ),
-                    ],
+                    ),
+                    const SizedBox(height: Tokens.gap + 12),
+                    BigButton(
+                      label: '내 위치로 찾기',
+                      critical: true,
+                      onPressed: () => _finish(context, pickManually: false),
+                    ),
+                    const SizedBox(height: Tokens.gap),
+                    BigButton(
+                      label: '직접 고를게요',
+                      mid: true,
+                      variant: ButtonVariant.neutral,
+                      onPressed: () => _finish(context, pickManually: true),
+                    ),
                   ],
                 ),
               ),
-              BigButton(
-                label: '내 위치로 찾기',
-                critical: true,
-                onPressed: () {
-                  setState(() {
-                    _notice = '위치로 찾기는 다음 단계에서 준비돼요. 지금은 김포시로 보여드릴게요.';
-                  });
-                  _finish(pickManually: false);
-                },
-              ),
               const SizedBox(height: Tokens.gap),
-              BigButton(
-                label: '직접 고를게요',
-                secondary: true,
-                onPressed: () => _finish(pickManually: true),
+              const PersistentNotice(
+                title: '위치를 안 켜도 괜찮아요',
+                text: '동네를 직접 고르면 그대로 쓸 수 있어요.\n자녀분이 대신 골라 주셔도 됩니다.',
               ),
             ],
           ),

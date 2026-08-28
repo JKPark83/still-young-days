@@ -10,17 +10,22 @@ void main() {
   const longTitle = '초등학교 등하굣길 교통안전 도우미 및 학교 주변 순찰 활동 지원';
 
   Widget wrap(Widget card) => MaterialApp(
-        theme: buildAppTheme(),
-        home: Scaffold(
-          body: SizedBox(width: 360, height: 520, child: card),
-        ),
-      );
+    theme: buildAppTheme(),
+    home: Scaffold(body: SizedBox(width: 360, height: 520, child: card)),
+  );
 
-  testWidgets('40-char title renders on multiple lines with no ellipsis',
-      (tester) async {
+  testWidgets('40-char title renders on multiple lines with no ellipsis', (
+    tester,
+  ) async {
     usePhoneView(tester);
     await tester.pumpWidget(
-      wrap(ItemCard(item: sampleItem(title: longTitle), onOpen: () {}, onCall: () {})),
+      wrap(
+        ItemCard(
+          item: sampleItem(title: longTitle),
+          onOpen: () {},
+          onCall: () {},
+        ),
+      ),
     );
     final text = tester.widget<Text>(find.text(longTitle));
     expect(text.overflow, TextOverflow.visible);
@@ -47,7 +52,13 @@ void main() {
     usePhoneView(tester);
     var opened = 0;
     await tester.pumpWidget(
-      wrap(ItemCard(item: sampleItem(phone: null), onOpen: () => opened++, onCall: () {})),
+      wrap(
+        ItemCard(
+          item: sampleItem(phone: null),
+          onOpen: () => opened++,
+          onCall: () {},
+        ),
+      ),
     );
     expect(find.text('📞 전화하기'), findsNothing);
     await tester.tap(find.widgetWithText(BigButton, '전화번호가 없어요 · 자세히 보기'));

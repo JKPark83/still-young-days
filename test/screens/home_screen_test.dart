@@ -1,4 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:still_young_days/widgets/item_card.dart';
+import 'package:still_young_days/screens/call_confirm_screen.dart';
 import 'package:still_young_days/screens/detail_screen.dart';
 import 'package:still_young_days/screens/home_screen.dart';
 import 'package:still_young_days/widgets/big_button.dart';
@@ -19,8 +21,9 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('다음 on the last card keeps 8 / 8 and shows a notice',
-      (tester) async {
+  testWidgets('다음 on the last card keeps 8 / 8 and shows a notice', (
+    tester,
+  ) async {
     usePhoneView(tester);
     await pumpApp(tester, home: const HomeScreen(), prefs: {'onboarded': true});
     await tester.pumpAndSettle();
@@ -42,8 +45,9 @@ void main() {
     expect(find.text('마지막 일자리예요.'), findsNothing);
   });
 
-  testWidgets('◀ 이전 on the first card shows the first-card notice',
-      (tester) async {
+  testWidgets('◀ 이전 on the first card shows the first-card notice', (
+    tester,
+  ) async {
     usePhoneView(tester);
     await pumpApp(tester, home: const HomeScreen(), prefs: {'onboarded': true});
     await tester.pumpAndSettle();
@@ -66,8 +70,9 @@ void main() {
     expect(find.text('다음 ▶'), findsNothing);
   });
 
-  testWidgets('home → detail → back keeps the same card number',
-      (tester) async {
+  testWidgets('home → detail → back keeps the same card number', (
+    tester,
+  ) async {
     usePhoneView(tester);
     await pumpApp(tester, home: const HomeScreen(), prefs: {'onboarded': true});
     await tester.pumpAndSettle();
@@ -75,7 +80,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('2 / 8'), findsOneWidget);
 
-    await tester.tap(find.text('자세히 보려면 여기를 누르세요').first);
+    await tester.tap(find.text(ItemCard.hint).first);
     await tester.pumpAndSettle();
     expect(find.byType(DetailScreen), findsOneWidget);
 
@@ -87,9 +92,16 @@ void main() {
 
   testWidgets('phone button on the card launches tel:', (tester) async {
     usePhoneView(tester);
-    final deps = await pumpApp(tester, home: const HomeScreen(), prefs: {'onboarded': true});
+    final deps = await pumpApp(
+      tester,
+      home: const HomeScreen(),
+      prefs: {'onboarded': true},
+    );
     await tester.pumpAndSettle();
     await tester.tap(find.widgetWithText(BigButton, '📞 전화하기'));
+    await tester.pumpAndSettle();
+    expect(find.byType(CallConfirmScreen), findsOneWidget);
+    await tester.tap(find.widgetWithText(BigButton, '📞 전화 걸기'));
     await tester.pumpAndSettle();
     expect(deps.phone.calls, ['031-000-0001']);
   });

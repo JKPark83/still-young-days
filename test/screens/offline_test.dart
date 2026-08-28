@@ -30,8 +30,9 @@ class _ScriptedRepository implements ItemRepository {
 }
 
 void main() {
-  testWidgets('splash: fetch fails with no cache → 다시 시도 → home',
-      (tester) async {
+  testWidgets('splash: fetch fails with no cache → 다시 시도 → home', (
+    tester,
+  ) async {
     usePhoneView(tester);
     await pumpApp(
       tester,
@@ -50,8 +51,9 @@ void main() {
     expect(find.text('1 / 8'), findsOneWidget);
   });
 
-  testWidgets('home: cached feed shows the "새 정보를 못 받았어요" banner',
-      (tester) async {
+  testWidgets('home: cached feed shows the "새 정보를 못 받았어요" banner', (
+    tester,
+  ) async {
     usePhoneView(tester);
     await pumpApp(
       tester,
@@ -70,8 +72,9 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('home: feed older than 48h shows the stale banner',
-      (tester) async {
+  testWidgets('home: feed older than 48h shows the stale banner', (
+    tester,
+  ) async {
     usePhoneView(tester);
     await pumpApp(
       tester,

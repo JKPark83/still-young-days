@@ -47,13 +47,15 @@ class RemoteItemRepository implements ItemRepository {
     final etag = await cache.etag(regionCode);
     http.Response res;
     try {
-      res = await _client.get(
-        uriFor(regionCode),
-        headers: {
-          'If-None-Match': ?etag,
-          if (readToken != null) 'Authorization': 'token $readToken',
-        },
-      ).timeout(timeout);
+      res = await _client
+          .get(
+            uriFor(regionCode),
+            headers: {
+              'If-None-Match': ?etag,
+              if (readToken != null) 'Authorization': 'token $readToken',
+            },
+          )
+          .timeout(timeout);
     } on TimeoutException {
       return _fallback(regionCode, 'timeout');
     } on SocketException catch (e) {
@@ -76,12 +78,18 @@ class RemoteItemRepository implements ItemRepository {
       await cache.write(regionCode, body, res.headers['etag']);
       return feed;
     }
-    return _fallback(regionCode, 'HTTP ${res.statusCode}',
-        statusCode: res.statusCode);
+    return _fallback(
+      regionCode,
+      'HTTP ${res.statusCode}',
+      statusCode: res.statusCode,
+    );
   }
 
-  Future<RegionFeed> _fallback(String code, String reason,
-      {int? statusCode}) async {
+  Future<RegionFeed> _fallback(
+    String code,
+    String reason, {
+    int? statusCode,
+  }) async {
     final cached = await cache.read(code);
     if (cached != null && cached.isNotEmpty) {
       return _parse(cached).copyWith(fromCache: true);

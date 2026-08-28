@@ -7,6 +7,8 @@ import '../utils/korean_date.dart';
 import '../widgets/big_button.dart';
 import '../widgets/item_card.dart';
 import '../widgets/persistent_notice.dart';
+import '../widgets/surface_card.dart';
+import 'call_confirm_screen.dart';
 import 'detail_screen.dart';
 import 'region_picker_screen.dart';
 import 'settings_screen.dart';
@@ -91,29 +93,8 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Future<void> _call(RegionItem item) async {
-    final ok = await AppDeps.of(context).launchPhone(item.phone!);
-    if (!ok && mounted) {
-      setState(() => _notice = '전화를 걸 수 없어요. 번호: ${item.phone}');
-    }
-  }
-
-  void _openDetail(RegionItem item) {
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(builder: (_) => DetailScreen(item: item)),
-    );
-  }
-
-  void _openSettings() {
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(builder: (_) => const SettingsScreen()),
-    );
-  }
-
-  void _openRegionPicker() {
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(builder: (_) => const RegionPickerScreen()),
-    );
+  void _push(Widget screen) {
+    Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => screen));
   }
 
   @override
@@ -124,26 +105,27 @@ class _HomeScreenState extends State<HomeScreen> {
           future: _feedFuture,
           builder: (context, snap) {
             if (snap.hasError) {
-              return _Message(
-                text: '일자리를 불러오지 못했어요.',
-                buttonLabel: '다시 시도',
-                onPressed: () => setState(() {
-                  _feedFuture =
-                      AppDeps.of(context).items.fetchItems(_loadedRegion!);
-                }),
-              );
-            }
-            if (!snap.hasData) {
-              return const Center(
-                child: SizedBox(
-                  width: 72,
-                  height: 72,
-                  child: CircularProgressIndicator(strokeWidth: 8),
+              return Padding(
+                padding: const EdgeInsets.all(Tokens.pagePadding),
+                child: _Message(
+                  text: '일자리를 불러오지 못했어요.',
+                  buttonLabel: '다시 시도',
+                  onPressed: () => setState(() {
+                    _feedFuture = AppDeps.of(context).items
+                        .fetchItems(_loadedRegion!);
+                  }),
                 ),
               );
             }
-            final feed = snap.data!;
-            return _buildLoaded(context, feed);
+            if (!snap.hasData) {
+              return const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 28),
+                child: Center(
+                  child: LinearProgressIndicator(minHeight: Tokens.progressBar),
+                ),
+              );
+            }
+            return _buildLoaded(context, snap.data!);
           },
         ),
       ),
@@ -175,93 +157,170 @@ class _HomeScreenState extends State<HomeScreen> {
       initialData: feed.regionName,
       builder: (context, snap) => Text(
         snap.data ?? feed.regionName,
-        style: text.titleLarge,
+        style: text.headlineMedium!.copyWith(fontSize: 31),
         maxLines: 2,
         overflow: TextOverflow.visible,
       ),
     );
 
-    return Padding(
-      padding: const EdgeInsets.all(Tokens.pagePadding),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // Top row: 동네 바꾸기 · 설정 (two neutral 64dp buttons).
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            Tokens.pagePadding,
+            Tokens.gapSmall,
+            Tokens.pagePadding,
+            0,
+          ),
+          child: Row(
             children: [
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    regionName,
-                    if (count > 0)
-                      Text(
-                        '${_index + 1} / $count',
-                        style: text.bodyLarge,
-                        semanticsLabel: '$count개 중 ${_index + 1}번째',
-                      ),
-                    Text(
-                      '${formatKoreanDateTime(feed.generatedAt.toLocal())} 기준',
-                      style: text.bodySmall,
-                    ),
-                  ],
+                child: BigButton(
+                  label: '동네 바꾸기',
+                  variant: ButtonVariant.neutral,
+                  fontSize: Tokens.body + 1,
+                  onPressed: () => _push(const RegionPickerScreen()),
                 ),
               ),
-              const SizedBox(width: Tokens.gap),
-              SizedBox(
-                width: 120,
+              const SizedBox(width: Tokens.gapSmall),
+              Expanded(
                 child: BigButton(
-                  label: '⚙ 설정',
-                  secondary: true,
-                  onPressed: _openSettings,
+                  label: '설정',
+                  variant: ButtonVariant.neutral,
+                  fontSize: Tokens.body + 1,
+                  onPressed: () => _push(const SettingsScreen()),
                 ),
               ),
             ],
           ),
-          if (_dataNotice != null) ...[
-            const SizedBox(height: Tokens.gap),
-            PersistentNotice(
+        ),
+        // Header: region · counter · position bar · date.
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            Tokens.pagePadding,
+            Tokens.gap - 2,
+            Tokens.pagePadding,
+            10,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Expanded(child: regionName),
+                  if (count > 0) ...[
+                    const SizedBox(width: Tokens.gapSmall),
+                    Text(
+                      '${_index + 1} / $count',
+                      style: text.labelLarge!.copyWith(
+                        fontSize: Tokens.body + 1,
+                        color: Tokens.muted,
+                      ),
+                      semanticsLabel: '$count개 중 ${_index + 1}번째',
+                    ),
+                  ],
+                ],
+              ),
+              if (count > 0) ...[
+                const SizedBox(height: 10),
+                ExcludeSemantics(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(Tokens.positionBar / 2),
+                    child: LinearProgressIndicator(
+                      minHeight: Tokens.positionBar,
+                      value: (_index + 1) / count,
+                    ),
+                  ),
+                ),
+              ],
+              const SizedBox(height: 8),
+              Text(
+                '${formatKoreanDateTime(feed.generatedAt.toLocal())} 기준',
+                style: text.bodySmall,
+              ),
+            ],
+          ),
+        ),
+        if (_dataNotice != null)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              Tokens.pagePadding,
+              0,
+              Tokens.pagePadding,
+              10,
+            ),
+            child: PersistentNotice(
               text: _dataNotice!,
               onClose: () => setState(() => _dataNotice = null),
             ),
-          ],
-          if (_notice != null) ...[
-            const SizedBox(height: Tokens.gap),
-            PersistentNotice(
+          ),
+        if (_notice != null)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              Tokens.pagePadding,
+              0,
+              Tokens.pagePadding,
+              10,
+            ),
+            child: PersistentNotice(
               text: _notice!,
               onClose: () => setState(() => _notice = null),
             ),
-          ],
-          const SizedBox(height: Tokens.gap),
-          Expanded(
-            child: count == 0
-                ? _Message(
-                    text: '지금은 ${feed.regionName}에 모집 중인 일자리가 없어요.',
+          ),
+        Expanded(
+          child: count == 0
+              ? Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    Tokens.pagePadding,
+                    Tokens.gap,
+                    Tokens.pagePadding,
+                    Tokens.pagePadding,
+                  ),
+                  child: _Message(
+                    text: '지금은 ${feed.regionName}에\n모집 중인 일자리가 없어요',
                     buttonLabel: '다른 동네 보기',
-                    onPressed: _openRegionPicker,
-                  )
-                : PageView.builder(
-                    controller: _pages,
-                    itemCount: count,
-                    onPageChanged: (i) => setState(() {
-                      _index = i;
-                      _notice = null;
-                    }),
-                    itemBuilder: (context, i) => ItemCard(
+                    onPressed: () => _push(const RegionPickerScreen()),
+                  ),
+                )
+              : PageView.builder(
+                  controller: _pages,
+                  itemCount: count,
+                  onPageChanged: (i) => setState(() {
+                    _index = i;
+                    _notice = null;
+                  }),
+                  itemBuilder: (context, i) => Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      Tokens.pagePadding,
+                      0,
+                      Tokens.pagePadding,
+                      Tokens.gap - 2,
+                    ),
+                    child: ItemCard(
                       item: items[i],
-                      onOpen: () => _openDetail(items[i]),
-                      onCall: () => _call(items[i]),
+                      onOpen: () => _push(DetailScreen(item: items[i])),
+                      onCall: () => _push(CallConfirmScreen(item: items[i])),
                     ),
                   ),
-          ),
-          if (count > 0) ...[
-            const SizedBox(height: Tokens.gap),
-            Row(
+                ),
+        ),
+        if (count > 0)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              Tokens.pagePadding,
+              8,
+              Tokens.pagePadding,
+              Tokens.pagePadding,
+            ),
+            child: Row(
               children: [
                 Expanded(
                   child: BigButton(
                     label: '◀ 이전',
-                    secondary: true,
+                    variant: ButtonVariant.ink,
                     onPressed: () => _go(-1, count),
                   ),
                 ),
@@ -269,18 +328,19 @@ class _HomeScreenState extends State<HomeScreen> {
                 Expanded(
                   child: BigButton(
                     label: '다음 ▶',
+                    variant: ButtonVariant.ink,
                     onPressed: () => _go(1, count),
                   ),
                 ),
               ],
             ),
-          ],
-        ],
-      ),
+          ),
+      ],
     );
   }
 }
 
+/// Empty / error state: message card plus one green action.
 class _Message extends StatelessWidget {
   const _Message({
     required this.text,
@@ -298,13 +358,19 @@ class _Message extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          text,
-          style: Theme.of(context).textTheme.titleLarge,
-          textAlign: TextAlign.center,
+        SurfaceCard(
+          padding: const EdgeInsets.symmetric(
+            horizontal: Tokens.gap + 4,
+            vertical: 28,
+          ),
+          child: Text(
+            text,
+            style: Theme.of(context).textTheme.titleLarge!
+                .copyWith(fontSize: 27, height: 1.55),
+          ),
         ),
-        const SizedBox(height: Tokens.gap * 2),
-        BigButton(label: buttonLabel, onPressed: onPressed),
+        const SizedBox(height: Tokens.cardPadding),
+        BigButton(label: buttonLabel, mid: true, onPressed: onPressed),
       ],
     );
   }

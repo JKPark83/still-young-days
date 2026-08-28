@@ -110,13 +110,12 @@ class RegionFeed {
     );
   }
 
-  RegionFeed copyWith({List<RegionItem>? items, bool? fromCache}) =>
-      RegionFeed(
-        schemaVersion: schemaVersion,
-        regionCode: regionCode,
-        regionName: regionName,
-        generatedAt: generatedAt,
-        items: items ?? this.items,
-        fromCache: fromCache ?? this.fromCache,
-      );
+  RegionFeed copyWith({List<RegionItem>? items, bool? fromCache}) => RegionFeed(
+    schemaVersion: schemaVersion,
+    regionCode: regionCode,
+    regionName: regionName,
+    generatedAt: generatedAt,
+    items: items ?? this.items,
+    fromCache: fromCache ?? this.fromCache,
+  );
 }

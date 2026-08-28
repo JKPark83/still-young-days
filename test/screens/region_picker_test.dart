@@ -7,8 +7,9 @@ import 'package:still_young_days/widgets/big_button.dart';
 import '../helpers.dart';
 
 void main() {
-  testWidgets('시/도 buttons are >= 72dp and 경기도 → 김포시 stores 41570',
-      (tester) async {
+  testWidgets('시/도 buttons are >= 72dp and 경기도 → 김포시 stores 41570', (
+    tester,
+  ) async {
     usePhoneView(tester);
     final deps = await pumpApp(
       tester,
@@ -23,9 +24,13 @@ void main() {
 
     await tester.tap(gyeonggi);
     await tester.pumpAndSettle();
-    final gimpo = find.widgetWithText(BigButton, '김포시');
+    final gimpo = find.text('김포시');
     // ListView builds lazily: scroll until built, then bring fully on screen.
-    await tester.scrollUntilVisible(gimpo, 200, scrollable: find.byType(Scrollable).first);
+    await tester.scrollUntilVisible(
+      gimpo,
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
     await tester.ensureVisible(gimpo);
     await tester.pumpAndSettle();
     await tester.tap(gimpo);
@@ -39,14 +44,18 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('1 / 8'), findsOneWidget);
 
-    await tester.tap(find.widgetWithText(BigButton, '⚙ 설정'));
+    await tester.tap(find.widgetWithText(BigButton, '설정'));
     await tester.pumpAndSettle();
     await tester.tap(find.textContaining('내 동네 바꾸기'));
     await tester.pumpAndSettle();
     await tester.tap(find.widgetWithText(BigButton, '경기도'));
     await tester.pumpAndSettle();
-    final suwon = find.widgetWithText(BigButton, '수원시');
-    await tester.scrollUntilVisible(suwon, 200, scrollable: find.byType(Scrollable).first);
+    final suwon = find.text('수원시');
+    await tester.scrollUntilVisible(
+      suwon,
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
     await tester.ensureVisible(suwon);
     await tester.pumpAndSettle();
     await tester.tap(suwon);

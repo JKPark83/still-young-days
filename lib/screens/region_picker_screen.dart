@@ -5,11 +5,13 @@ import '../models/region.dart';
 import '../theme/tokens.dart';
 import '../widgets/back_bar.dart';
 import '../widgets/big_button.dart';
+import '../widgets/list_row.dart';
 import '../widgets/persistent_notice.dart';
 import '../widgets/region_name.dart';
+import '../widgets/surface_card.dart';
 
-/// Screen 6. Step 1: 시/도 grid (2 columns, ≥72dp). Step 2: 시군구 list.
-/// No search box. Back on step 2 returns to step 1.
+/// Screen 6. Step 1: 시·도 grid (2 columns, 84dp cards). Step 2: 시군구 rows
+/// in one white card. No search box. Back on step 2 returns to step 1.
 class RegionPickerScreen extends StatefulWidget {
   const RegionPickerScreen({super.key});
 
@@ -31,71 +33,129 @@ class _RegionPickerScreenState extends State<RegionPickerScreen> {
   Widget build(BuildContext context) {
     final deps = AppDeps.of(context);
     final text = Theme.of(context).textTheme;
+    final nameStyle = text.titleLarge!.copyWith(fontSize: 30, letterSpacing: 0);
     return Scaffold(
       appBar: BackBar(
-        title: _sido == null ? '내 동네 고르기' : _sido!.name,
-        onBack: _sido == null
-            ? null
-            : () => setState(() {
-                  _sido = null;
-                }),
+        onBack: _sido == null ? null : () => setState(() => _sido = null),
       ),
       body: FutureBuilder<List<Sido>>(
         future: deps.regions.fetchSido(),
         builder: (context, snap) {
           if (!snap.hasData) {
-            return const Center(child: CircularProgressIndicator(strokeWidth: 8));
+            return const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 28),
+              child: Center(
+                child: LinearProgressIndicator(minHeight: Tokens.progressBar),
+              ),
+            );
           }
           final sidoList = snap.data!;
           return ListView(
-            padding: const EdgeInsets.all(Tokens.pagePadding),
+            padding: const EdgeInsets.only(bottom: Tokens.cardPadding),
             children: [
-              ValueListenableBuilder<String>(
-                valueListenable: deps.settings.regionCode,
-                builder: (context, code, _) => RegionName(
-                  code: code,
-                  builder: (context, name) => Text(
-                    '지금 동네: $name',
-                    style: text.titleLarge,
-                  ),
+              // Header block with a hairline underneath.
+              Container(
+                padding: const EdgeInsets.fromLTRB(
+                  Tokens.pagePadding,
+                  Tokens.gap,
+                  Tokens.pagePadding,
+                  Tokens.gapSmall,
                 ),
-              ),
-              const SizedBox(height: Tokens.gap),
-              BigButton(
-                label: '📍 내 위치로 다시 찾기',
-                secondary: true,
-                onPressed: () => setState(() {
-                  _notice = '내 위치로 찾기는 다음 단계에서 준비돼요.';
-                }),
-              ),
-              if (_notice != null) ...[
-                const SizedBox(height: Tokens.gap),
-                PersistentNotice(
-                  text: _notice!,
-                  onClose: () => setState(() => _notice = null),
-                ),
-              ],
-              const SizedBox(height: Tokens.gap),
-              if (_sido == null) ...[
-                Text('시/도를 고르세요', style: text.bodyLarge),
-                const SizedBox(height: Tokens.gap / 2),
-                _SidoGrid(
-                  sidoList: sidoList,
-                  onPick: (s) => setState(() => _sido = s),
-                ),
-              ] else ...[
-                Text('시/군/구를 고르세요', style: text.bodyLarge),
-                const SizedBox(height: Tokens.gap / 2),
-                for (final sgg in _sido!.sigungu)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: Tokens.gap),
-                    child: BigButton(
-                      label: sgg.name,
-                      secondary: true,
-                      onPressed: () => _pick(sgg),
+                decoration: const BoxDecoration(
+                  border: Border(
+                    bottom: BorderSide(
+                      color: Tokens.divider,
+                      width: Tokens.borderWidth,
                     ),
                   ),
-              ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (_sido == null) ...[
+                      Text(
+                        '지금 내 동네',
+                        style: text.bodySmall!.copyWith(fontSize: 18),
+                      ),
+                      ValueListenableBuilder<String>(
+                        valueListenable: deps.settings.regionCode,
+                        builder: (context, code, _) => RegionName(
+                          code: code,
+                          builder: (context, name) =>
+                              Text(name, style: nameStyle),
+                        ),
+                      ),
+                      const SizedBox(height: Tokens.gapSmall),
+                      BigButton(
+                        label: '내 위치로 다시 찾기',
+                        variant: ButtonVariant.neutral,
+                        fontSize: Tokens.body + 2,
+                        onPressed: () => setState(() {
+                          _notice = '내 위치로 찾기는 다음 단계에서 준비돼요.';
+                        }),
+                      ),
+                      if (_notice != null) ...[
+                        const SizedBox(height: Tokens.gapSmall),
+                        PersistentNotice(
+                          text: _notice!,
+                          onClose: () => setState(() => _notice = null),
+                        ),
+                      ],
+                    ] else ...[
+                      Text(
+                        '고른 시 · 도',
+                        style: text.bodySmall!.copyWith(fontSize: 18),
+                      ),
+                      Text(_sido!.name, style: nameStyle),
+                    ],
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  Tokens.pagePadding,
+                  Tokens.gap - 2,
+                  Tokens.pagePadding,
+                  6,
+                ),
+                child: Text(
+                  _sido == null ? '시 · 도를 고르세요' : '동네를 고르세요',
+                  style: text.titleLarge!.copyWith(letterSpacing: 0),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  Tokens.pagePadding,
+                  6,
+                  Tokens.pagePadding,
+                  0,
+                ),
+                child: _sido == null
+                    ? _SidoGrid(
+                        sidoList: sidoList,
+                        onPick: (s) => setState(() => _sido = s),
+                      )
+                    : ValueListenableBuilder<String>(
+                        valueListenable: deps.settings.regionCode,
+                        builder: (context, current, _) => SurfaceCard(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              for (final (i, sgg) in _sido!.sigungu.indexed)
+                                ListRow(
+                                  title: sgg.name,
+                                  chip: sgg.code == current ? '✔ 지금 여기' : null,
+                                  last: i == _sido!.sigungu.length - 1,
+                                  semanticsLabel: sgg.code == current
+                                      ? '${sgg.name}, 지금 여기'
+                                      : sgg.name,
+                                  onTap: () => _pick(sgg),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ),
+              ),
             ],
           );
         },
@@ -112,35 +172,28 @@ class _SidoGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    Widget cell(Sido s) => BigButton(
+      label: s.name,
+      variant: ButtonVariant.card,
+      minHeightOverride: Tokens.gridCell,
+      fontSize: Tokens.body + 1,
+      onPressed: () => onPick(s),
+    );
     final rows = <Widget>[];
     for (var i = 0; i < sidoList.length; i += 2) {
       final left = sidoList[i];
       final right = i + 1 < sidoList.length ? sidoList[i + 1] : null;
       rows.add(
         Padding(
-          padding: const EdgeInsets.only(bottom: Tokens.gap),
+          padding: const EdgeInsets.only(bottom: Tokens.gap - 2),
           child: IntrinsicHeight(
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                Expanded(child: cell(left)),
+                const SizedBox(width: Tokens.gap - 2),
                 Expanded(
-                  child: BigButton(
-                    label: left.name,
-                    critical: true,
-                    secondary: true,
-                    onPressed: () => onPick(left),
-                  ),
-                ),
-                const SizedBox(width: Tokens.gap),
-                Expanded(
-                  child: right == null
-                      ? const SizedBox.shrink()
-                      : BigButton(
-                          label: right.name,
-                          critical: true,
-                          secondary: true,
-                          onPressed: () => onPick(right),
-                        ),
+                  child: right == null ? const SizedBox.shrink() : cell(right),
                 ),
               ],
             ),
