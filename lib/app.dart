@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 
 import 'app_deps.dart';
 import 'data/item_repository.dart';
+import 'data/neighbor_repository.dart';
 import 'data/region_repository.dart';
 import 'data/settings_store.dart';
+import 'location/location_service.dart';
+import 'location/region_locator.dart';
 import 'screens/splash_screen.dart';
 import 'theme/app_theme.dart';
 import 'theme/tokens.dart';
@@ -17,6 +20,9 @@ class StillYoungApp extends StatelessWidget {
     required this.items,
     required this.regions,
     required this.settings,
+    required this.location,
+    required this.regionLocator,
+    required this.neighbors,
     this.launchPhone = launchPhoneCall,
     this.clock = DateTime.now,
     this.home,
@@ -25,6 +31,9 @@ class StillYoungApp extends StatelessWidget {
   final ItemRepository items;
   final RegionRepository regions;
   final SettingsStore settings;
+  final LocationService location;
+  final RegionLocator regionLocator;
+  final NeighborRepository neighbors;
   final PhoneLauncher launchPhone;
   final DateTime Function() clock;
 
@@ -37,6 +46,9 @@ class StillYoungApp extends StatelessWidget {
       items: items,
       regions: regions,
       settings: settings,
+      location: location,
+      regionLocator: regionLocator,
+      neighbors: neighbors,
       launchPhone: launchPhone,
       clock: clock,
       child: MaterialApp(

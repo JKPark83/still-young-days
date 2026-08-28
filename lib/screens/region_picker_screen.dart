@@ -22,10 +22,37 @@ class RegionPickerScreen extends StatefulWidget {
 class _RegionPickerScreenState extends State<RegionPickerScreen> {
   Sido? _sido;
   String? _notice;
+  bool _locating = false;
 
   Future<void> _pick(Sigungu sgg) async {
     final navigator = Navigator.of(context);
     await AppDeps.of(context).settings.setRegionCode(sgg.code);
+    navigator.popUntil((route) => route.isFirst);
+  }
+
+  Future<void> _findByLocation() async {
+    setState(() {
+      _locating = true;
+      _notice = null;
+    });
+    final deps = AppDeps.of(context);
+    final navigator = Navigator.of(context);
+    final position = await deps.location.current();
+    String? code;
+    if (position != null) {
+      await deps.regionLocator.ensureLoaded();
+      code = deps.regionLocator.locate(position.latitude, position.longitude);
+    }
+    if (!mounted) return;
+    if (code == null) {
+      setState(() {
+        _locating = false;
+        _notice = '내 동네를 찾지 못했어요. 목록에서 골라 주세요.';
+      });
+      return;
+    }
+    await deps.settings.setRegionCode(code);
+    if (!mounted) return;
     navigator.popUntil((route) => route.isFirst);
   }
 
@@ -87,12 +114,10 @@ class _RegionPickerScreenState extends State<RegionPickerScreen> {
                       ),
                       const SizedBox(height: Tokens.gapSmall),
                       BigButton(
-                        label: '내 위치로 다시 찾기',
+                        label: _locating ? '위치를 찾는 중이에요' : '내 위치로 다시 찾기',
                         variant: ButtonVariant.neutral,
                         fontSize: Tokens.body + 2,
-                        onPressed: () => setState(() {
-                          _notice = '내 위치로 찾기는 다음 단계에서 준비돼요.';
-                        }),
+                        onPressed: _locating ? null : _findByLocation,
                       ),
                       if (_notice != null) ...[
                         const SizedBox(height: Tokens.gapSmall),

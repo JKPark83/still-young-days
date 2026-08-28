@@ -27,6 +27,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   late Future<RegionFeed> _feedFuture;
   late Future<String> _regionNameFuture;
+  late Future<({String code, String name})?> _neighborFuture;
   late final ValueNotifier<String> _regionCode;
   late final PageController _pages = PageController();
   int _index = 0;
@@ -49,7 +50,20 @@ class _HomeScreenState extends State<HomeScreen> {
         ? Future.value(initial)
         : deps.items.fetchItems(_loadedRegion!);
     _regionNameFuture = deps.regions.nameOf(_loadedRegion!);
+    _neighborFuture = _loadNeighbor(deps, _loadedRegion!);
     _regionCode.addListener(_onRegionChanged);
+  }
+
+  /// Name of the first neighboring 시군구, for the empty-list "옆 동네 보기"
+  /// button; null when [code] has no recorded neighbor.
+  static Future<({String code, String name})?> _loadNeighbor(
+    AppDeps deps,
+    String code,
+  ) async {
+    final neighborCode = await deps.neighbors.firstNeighborOf(code);
+    if (neighborCode == null) return null;
+    final name = await deps.regions.nameOf(neighborCode);
+    return (code: neighborCode, name: name);
   }
 
   @override
@@ -71,6 +85,7 @@ class _HomeScreenState extends State<HomeScreen> {
       _dataNoticeShown = false;
       _feedFuture = deps.items.fetchItems(code);
       _regionNameFuture = deps.regions.nameOf(code);
+      _neighborFuture = _loadNeighbor(deps, code);
       if (_pages.hasClients) _pages.jumpToPage(0);
     });
   }
@@ -279,10 +294,24 @@ class _HomeScreenState extends State<HomeScreen> {
                     Tokens.pagePadding,
                     Tokens.pagePadding,
                   ),
-                  child: _Message(
-                    text: '지금은 ${feed.regionName}에\n모집 중인 일자리가 없어요',
-                    buttonLabel: '다른 동네 보기',
-                    onPressed: () => _push(const RegionPickerScreen()),
+                  child: FutureBuilder<({String code, String name})?>(
+                    future: _neighborFuture,
+                    builder: (context, snap) {
+                      final neighbor = snap.data;
+                      return _Message(
+                        text: '지금은 ${feed.regionName}에\n모집 중인 일자리가 없어요',
+                        buttonLabel: '다른 동네 보기',
+                        onPressed: () => _push(const RegionPickerScreen()),
+                        secondaryLabel: neighbor == null
+                            ? null
+                            : '옆 동네(${neighbor.name}) 보기',
+                        onSecondaryPressed: neighbor == null
+                            ? null
+                            : () =>
+                                  AppDeps.of(context).settings
+                                      .setRegionCode(neighbor.code),
+                      );
+                    },
                   ),
                 )
               : PageView.builder(
@@ -340,17 +369,22 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-/// Empty / error state: message card plus one green action.
+/// Empty / error state: message card plus one green action, plus an
+/// optional neutral second action (옆 동네 보기).
 class _Message extends StatelessWidget {
   const _Message({
     required this.text,
     required this.buttonLabel,
     required this.onPressed,
+    this.secondaryLabel,
+    this.onSecondaryPressed,
   });
 
   final String text;
   final String buttonLabel;
   final VoidCallback onPressed;
+  final String? secondaryLabel;
+  final VoidCallback? onSecondaryPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -371,6 +405,15 @@ class _Message extends StatelessWidget {
         ),
         const SizedBox(height: Tokens.cardPadding),
         BigButton(label: buttonLabel, mid: true, onPressed: onPressed),
+        if (secondaryLabel != null) ...[
+          const SizedBox(height: Tokens.gapSmall),
+          BigButton(
+            label: secondaryLabel!,
+            mid: true,
+            variant: ButtonVariant.neutral,
+            onPressed: onSecondaryPressed,
+          ),
+        ],
       ],
     );
   }
