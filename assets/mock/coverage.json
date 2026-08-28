@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-08-28T03:00:00Z",
+  "regions": {
+    "41570": { "centersTotal": 2, "centersCovered": 1 },
+    "41110": { "centersTotal": 3, "centersCovered": 0 }
+  }
+}

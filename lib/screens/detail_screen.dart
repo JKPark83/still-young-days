@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../models/region_item.dart';
 import '../theme/tokens.dart';
@@ -23,19 +24,50 @@ class DetailScreen extends StatelessWidget {
     );
   }
 
+  bool get _isEvent => item.type == ItemType.event;
+
+  /// "9월 7일 (월)" or "9월 15일 (화) ~ 12월 8일 (화)"; null when undated.
+  String? get _eventWhen {
+    final start = item.eventDate;
+    final end = item.eventEnd;
+    if (start == null) return null;
+    if (end == null) return formatKoreanDate(start);
+    return '${formatKoreanDate(start)} ~ ${formatKoreanDate(end)}';
+  }
+
+  Future<void> _openSource() async {
+    final url = item.sourceUrl;
+    if (url == null) return;
+    try {
+      await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+    } on Object {
+      // The 복지관 page failing to open must never crash the app.
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme;
-    final rows = <InfoRow?>[
-      InfoRow.maybe('하는 일', item.description),
-      InfoRow.maybe('장소', item.address),
-      InfoRow.maybe('모집 나이', item.age),
-      InfoRow.maybe(
-        '신청 기간',
-        formatKoreanDateRange(item.applyStart, item.applyEnd),
-      ),
-      InfoRow.maybe('기관', item.org),
-    ].whereType<InfoRow>().toList(growable: false);
+    final rows =
+        (_isEvent
+                ? <InfoRow?>[
+                    InfoRow.maybe('언제', _eventWhen),
+                    InfoRow.maybe('어디서', item.address ?? item.place),
+                    InfoRow.maybe('내용', item.description),
+                    InfoRow.maybe('기관', item.org),
+                  ]
+                : <InfoRow?>[
+                    InfoRow.maybe('하는 일', item.description),
+                    InfoRow.maybe('장소', item.address),
+                    InfoRow.maybe('모집 나이', item.age),
+                    InfoRow.maybe(
+                      '신청 기간',
+                      formatKoreanDateRange(item.applyStart, item.applyEnd),
+                    ),
+                    InfoRow.maybe('기관', item.org),
+                  ])
+            .whereType<InfoRow>()
+            .toList(growable: false);
 
     return Scaffold(
       appBar: const BackBar(divider: true),
@@ -57,6 +89,16 @@ class DetailScreen extends StatelessWidget {
           const Divider(),
           const SizedBox(height: Tokens.gap + 6),
           ...rows,
+          if (_isEvent && item.sourceUrl != null) ...[
+            const SizedBox(height: Tokens.gap),
+            BigButton(
+              label: '원문 보기',
+              variant: ButtonVariant.neutral,
+              mid: true,
+              semanticsLabel: '복지관 홈페이지에서 원문 보기',
+              onPressed: _openSource,
+            ),
+          ],
         ],
       ),
       bottomNavigationBar: Container(
