@@ -1,7 +1,7 @@
 # 오늘도청춘 (Still Young Days) — 앱
 
 70대 어르신용 동네 일자리 앱. P1(목 JSON 7화면) 완료, P2(실데이터 연결) 진행 중.
-기획: `~/myworkspace/still-young/docs/plan/` (`*p1-ui-mock*`, `*p2-data-pipeline*`)
+기획: `docs/plan/` (`*p1-ui-mock*`, `*p2-data-pipeline*`), 아이디어: `ideas/`
 데이터 파이프라인: `~/myworkspace/still-young-days-data`
 
 ## 실행
