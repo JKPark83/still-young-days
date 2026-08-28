@@ -70,6 +70,23 @@ void main() {
     expect(find.text('다음 ▶'), findsNothing);
   });
 
+  testWidgets('0 items with a neighbor → 옆 동네 보기 switches region', (
+    tester,
+  ) async {
+    usePhoneView(tester);
+    final deps = await pumpApp(
+      tester,
+      home: const HomeScreen(),
+      prefs: {'onboarded': true, 'regionCode': '11110'},
+    );
+    await tester.pumpAndSettle();
+    expect(find.widgetWithText(BigButton, '옆 동네(중구) 보기'), findsOneWidget);
+
+    await tester.tap(find.widgetWithText(BigButton, '옆 동네(중구) 보기'));
+    await tester.pumpAndSettle();
+    expect(deps.settings.regionCode.value, '11140');
+  });
+
   testWidgets('home → detail → back keeps the same card number', (
     tester,
   ) async {

@@ -1,8 +1,11 @@
 import 'package:flutter/widgets.dart';
 
 import 'data/item_repository.dart';
+import 'data/neighbor_repository.dart';
 import 'data/region_repository.dart';
 import 'data/settings_store.dart';
+import 'location/location_service.dart';
+import 'location/region_locator.dart';
 import 'utils/phone_call.dart';
 
 /// Hands repositories and the settings store down the tree without a
@@ -13,6 +16,9 @@ class AppDeps extends InheritedWidget {
     required this.items,
     required this.regions,
     required this.settings,
+    required this.location,
+    required this.regionLocator,
+    required this.neighbors,
     required this.launchPhone,
     this.clock = DateTime.now,
     required super.child,
@@ -21,6 +27,9 @@ class AppDeps extends InheritedWidget {
   final ItemRepository items;
   final RegionRepository regions;
   final SettingsStore settings;
+  final LocationService location;
+  final RegionLocator regionLocator;
+  final NeighborRepository neighbors;
   final PhoneLauncher launchPhone;
 
   /// Current time source; tests pass a fixed value for the stale-data banner.

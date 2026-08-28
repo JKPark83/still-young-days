@@ -5,9 +5,12 @@ import 'app.dart';
 import 'data/feed_cache.dart';
 import 'data/item_repository.dart';
 import 'data/mock_item_repository.dart';
+import 'data/neighbor_repository.dart';
 import 'data/region_repository.dart';
 import 'data/remote_item_repository.dart';
 import 'data/settings_store.dart';
+import 'location/location_service.dart';
+import 'location/region_locator.dart';
 
 /// Base URL of the published `data/` folder, e.g.
 /// `https://<owner>.github.io/still-young-days-data/data/`.
@@ -41,6 +44,9 @@ Future<void> main() async {
       items: items,
       regions: RegionRepository(),
       settings: settings,
+      location: const DeviceLocationService(),
+      regionLocator: RegionLocator(),
+      neighbors: NeighborRepository(),
     ),
   );
 }

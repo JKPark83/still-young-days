@@ -67,6 +67,7 @@ flutter:
 
   assets:
     - assets/mock/
+    - assets/geo/
 
   fonts:
     - family: Pretendard

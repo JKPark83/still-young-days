@@ -7,6 +7,48 @@ import 'package:still_young_days/widgets/big_button.dart';
 import '../helpers.dart';
 
 void main() {
+  testWidgets('내 위치로 다시 찾기 stores the located region and closes', (
+    tester,
+  ) async {
+    usePhoneView(tester);
+    final deps = await pumpApp(
+      tester,
+      home: const HomeScreen(),
+      prefs: {'onboarded': true, 'regionCode': '11110'},
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(BigButton, '동네 바꾸기'));
+    await tester.pumpAndSettle();
+    expect(find.byType(RegionPickerScreen), findsOneWidget);
+
+    await tester.tap(find.widgetWithText(BigButton, '내 위치로 다시 찾기'));
+    await tester.pumpAndSettle();
+
+    expect(deps.settings.regionCode.value, '41570');
+    expect(find.byType(RegionPickerScreen), findsNothing);
+    expect(find.byType(HomeScreen), findsOneWidget);
+  });
+
+  testWidgets('내 위치로 다시 찾기 shows a notice when GPS fails', (tester) async {
+    usePhoneView(tester);
+    final deps = await pumpApp(
+      tester,
+      home: const HomeScreen(),
+      prefs: {'onboarded': true, 'regionCode': '11110'},
+      location: FakeLocationService(latitude: null, longitude: null),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(BigButton, '동네 바꾸기'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.widgetWithText(BigButton, '내 위치로 다시 찾기'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('내 동네를 찾지 못했어요. 목록에서 골라 주세요.'), findsOneWidget);
+    expect(deps.settings.regionCode.value, '11110');
+    expect(find.byType(RegionPickerScreen), findsOneWidget);
+  });
+
   testWidgets('시/도 buttons are >= 72dp and 경기도 → 김포시 stores 41570', (
     tester,
   ) async {
