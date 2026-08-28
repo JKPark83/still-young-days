@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../app_deps.dart';
 import '../models/region_item.dart';
 import '../theme/tokens.dart';
+import '../widgets/big_button.dart';
 import 'home_screen.dart';
 import 'location_intro_screen.dart';
 
@@ -17,6 +18,7 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen> {
   bool _started = false;
+  bool _failed = false;
 
   @override
   void didChangeDependencies() {
@@ -28,10 +30,17 @@ class _SplashScreenState extends State<SplashScreen> {
 
   Future<void> _load() async {
     final deps = AppDeps.of(context);
-    final results = await Future.wait<Object?>([
-      deps.items.fetchItems(deps.settings.regionCode.value),
-      Future<void>.delayed(const Duration(seconds: 1)),
-    ]);
+    final List<Object?> results;
+    try {
+      results = await Future.wait<Object?>([
+        deps.items.fetchItems(deps.settings.regionCode.value),
+        Future<void>.delayed(const Duration(seconds: 1)),
+      ]);
+    } on Object {
+      // Network failed and no cache: stay here and offer a retry button.
+      if (mounted) setState(() => _failed = true);
+      return;
+    }
     if (!mounted) return;
     final feed = results.first as RegionFeed;
     final next = deps.settings.onboarded.value
@@ -42,9 +51,38 @@ class _SplashScreenState extends State<SplashScreen> {
     );
   }
 
+  void _retry() {
+    setState(() => _failed = false);
+    _load();
+  }
+
   @override
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme;
+    if (_failed) {
+      return Scaffold(
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(Tokens.pagePadding),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text('오늘도청춘', style: text.displayLarge, textAlign: TextAlign.center),
+                const SizedBox(height: Tokens.gap * 2),
+                Text(
+                  '일자리를 불러오지 못했어요.\n인터넷 연결을 확인해 주세요.',
+                  style: text.titleLarge,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: Tokens.gap * 2),
+                BigButton(label: '다시 시도', onPressed: _retry),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
     return Scaffold(
       body: SafeArea(
         child: Center(

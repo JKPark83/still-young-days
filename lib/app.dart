@@ -18,6 +18,7 @@ class StillYoungApp extends StatelessWidget {
     required this.regions,
     required this.settings,
     this.launchPhone = launchPhoneCall,
+    this.clock = DateTime.now,
     this.home,
   });
 
@@ -25,6 +26,7 @@ class StillYoungApp extends StatelessWidget {
   final RegionRepository regions;
   final SettingsStore settings;
   final PhoneLauncher launchPhone;
+  final DateTime Function() clock;
 
   /// Test hook: start on any screen instead of the splash.
   final Widget? home;
@@ -36,6 +38,7 @@ class StillYoungApp extends StatelessWidget {
       regions: regions,
       settings: settings,
       launchPhone: launchPhone,
+      clock: clock,
       child: MaterialApp(
         title: '오늘도청춘',
         debugShowCheckedModeBanner: false,

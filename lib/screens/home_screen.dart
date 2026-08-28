@@ -29,6 +29,8 @@ class _HomeScreenState extends State<HomeScreen> {
   late final PageController _pages = PageController();
   int _index = 0;
   String? _notice;
+  String? _dataNotice;
+  bool _dataNoticeShown = false;
   String? _loadedRegion;
   bool _initialised = false;
 
@@ -63,6 +65,8 @@ class _HomeScreenState extends State<HomeScreen> {
       _loadedRegion = code;
       _index = 0;
       _notice = null;
+      _dataNotice = null;
+      _dataNoticeShown = false;
       _feedFuture = deps.items.fetchItems(code);
       _regionNameFuture = deps.regions.nameOf(code);
       if (_pages.hasClients) _pages.jumpToPage(0);
@@ -146,8 +150,24 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  /// Banner text for a stale or cached feed; null when the data is fresh.
+  static String? dataNoticeFor(RegionFeed feed, DateTime now) {
+    final date = formatKoreanDateTime(feed.generatedAt.toLocal());
+    if (feed.fromCache) return '새 정보를 못 받았어요. $date 정보예요.';
+    if (now.difference(feed.generatedAt) > staleAfter) {
+      return '정보가 오래됐어요. $date 정보예요.';
+    }
+    return null;
+  }
+
+  static const Duration staleAfter = Duration(hours: 48);
+
   Widget _buildLoaded(BuildContext context, RegionFeed feed) {
     final text = Theme.of(context).textTheme;
+    if (!_dataNoticeShown) {
+      _dataNoticeShown = true;
+      _dataNotice = dataNoticeFor(feed, AppDeps.of(context).clock());
+    }
     final items = feed.items;
     final count = items.length;
     final regionName = FutureBuilder<String>(
@@ -198,6 +218,13 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ],
           ),
+          if (_dataNotice != null) ...[
+            const SizedBox(height: Tokens.gap),
+            PersistentNotice(
+              text: _dataNotice!,
+              onClose: () => setState(() => _dataNotice = null),
+            ),
+          ],
           if (_notice != null) ...[
             const SizedBox(height: Tokens.gap),
             PersistentNotice(

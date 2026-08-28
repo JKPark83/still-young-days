@@ -81,6 +81,7 @@ class RegionFeed {
     required this.regionName,
     required this.generatedAt,
     required this.items,
+    this.fromCache = false,
   });
 
   final int schemaVersion;
@@ -88,6 +89,10 @@ class RegionFeed {
   final String regionName;
   final DateTime generatedAt;
   final List<RegionItem> items;
+
+  /// True when the network failed and this feed came from the local cache.
+  /// Runtime-only; not part of the JSON schema.
+  final bool fromCache;
 
   factory RegionFeed.fromJson(Map<String, dynamic> json) {
     final version = json['schemaVersion'] as int;
@@ -105,11 +110,13 @@ class RegionFeed {
     );
   }
 
-  RegionFeed copyWith({List<RegionItem>? items}) => RegionFeed(
+  RegionFeed copyWith({List<RegionItem>? items, bool? fromCache}) =>
+      RegionFeed(
         schemaVersion: schemaVersion,
         regionCode: regionCode,
         regionName: regionName,
         generatedAt: generatedAt,
         items: items ?? this.items,
+        fromCache: fromCache ?? this.fromCache,
       );
 }

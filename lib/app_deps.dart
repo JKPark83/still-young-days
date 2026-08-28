@@ -14,6 +14,7 @@ class AppDeps extends InheritedWidget {
     required this.regions,
     required this.settings,
     required this.launchPhone,
+    this.clock = DateTime.now,
     required super.child,
   });
 
@@ -21,6 +22,9 @@ class AppDeps extends InheritedWidget {
   final RegionRepository regions;
   final SettingsStore settings;
   final PhoneLauncher launchPhone;
+
+  /// Current time source; tests pass a fixed value for the stale-data banner.
+  final DateTime Function() clock;
 
   static AppDeps of(BuildContext context) {
     final deps = context.dependOnInheritedWidgetOfExactType<AppDeps>();
