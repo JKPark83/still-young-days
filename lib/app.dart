@@ -7,6 +7,7 @@ import 'data/region_repository.dart';
 import 'data/settings_store.dart';
 import 'location/location_service.dart';
 import 'location/region_locator.dart';
+import 'metrics/metrics.dart';
 import 'screens/splash_screen.dart';
 import 'theme/app_theme.dart';
 import 'theme/tokens.dart';
@@ -23,6 +24,7 @@ class StillYoungApp extends StatelessWidget {
     required this.location,
     required this.regionLocator,
     required this.neighbors,
+    required this.metrics,
     this.launchPhone = launchPhoneCall,
     this.clock = DateTime.now,
     this.home,
@@ -34,6 +36,7 @@ class StillYoungApp extends StatelessWidget {
   final LocationService location;
   final RegionLocator regionLocator;
   final NeighborRepository neighbors;
+  final Metrics metrics;
   final PhoneLauncher launchPhone;
   final DateTime Function() clock;
 
@@ -50,6 +53,7 @@ class StillYoungApp extends StatelessWidget {
       regionLocator: regionLocator,
       neighbors: neighbors,
       launchPhone: launchPhone,
+      metrics: metrics,
       clock: clock,
       child: MaterialApp(
         title: '오늘도청춘',

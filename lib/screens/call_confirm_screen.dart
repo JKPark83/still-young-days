@@ -25,7 +25,9 @@ class _CallConfirmScreenState extends State<CallConfirmScreen> {
   Future<void> _dial() async {
     final phone = widget.item.phone!;
     final navigator = Navigator.of(context);
-    final ok = await AppDeps.of(context).launchPhone(phone);
+    final deps = AppDeps.of(context);
+    await deps.metrics.incrementCallTapCount();
+    final ok = await deps.launchPhone(phone);
     if (!mounted) return;
     if (ok) {
       navigator.maybePop();

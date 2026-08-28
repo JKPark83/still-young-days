@@ -11,6 +11,7 @@ import 'data/remote_item_repository.dart';
 import 'data/settings_store.dart';
 import 'location/location_service.dart';
 import 'location/region_locator.dart';
+import 'metrics/metrics.dart';
 
 /// Base URL of the published `data/` folder, e.g.
 /// `https://<owner>.github.io/still-young-days-data/data/`.
@@ -39,6 +40,8 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final settings = await SettingsStore.load();
   final items = await buildItemRepository();
+  final metrics = await Metrics.load();
+  await metrics.incrementOpenCount();
   runApp(
     StillYoungApp(
       items: items,
@@ -47,6 +50,7 @@ Future<void> main() async {
       location: const DeviceLocationService(),
       regionLocator: RegionLocator(),
       neighbors: NeighborRepository(),
+      metrics: metrics,
     ),
   );
 }

@@ -4,6 +4,7 @@ import '../app_deps.dart';
 import '../theme/tokens.dart';
 import '../widgets/back_bar.dart';
 import '../widgets/big_button.dart';
+import '../widgets/info_row.dart';
 import '../widgets/list_row.dart';
 import '../widgets/region_name.dart';
 import '../widgets/screen_title.dart';
@@ -74,10 +75,11 @@ class SettingsScreen extends StatelessWidget {
                     onTap: () => settings.setNotifyOn(!on),
                   ),
                 ),
+                ListRow(title: '앱 사용법', onTap: () => push(const HowToScreen())),
                 ListRow(
-                  title: '앱 사용법',
+                  title: '사용 기록',
                   last: true,
-                  onTap: () => push(const HowToScreen()),
+                  onTap: () => push(const UsageStatsScreen()),
                 ),
               ],
             ),
@@ -173,6 +175,37 @@ class TextSizeScreen extends StatelessWidget {
                 },
               ),
             ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Sub-screen of settings: read-only counters so a family member can check
+/// that the app is being used. No server upload — the numbers only live on
+/// this device.
+class UsageStatsScreen extends StatelessWidget {
+  const UsageStatsScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final metrics = AppDeps.of(context).metrics;
+    return Scaffold(
+      appBar: const BackBar(),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(
+          Tokens.pagePadding,
+          0,
+          Tokens.pagePadding,
+          Tokens.cardPadding,
+        ),
+        children: [
+          const ScreenTitle('사용 기록'),
+          const SizedBox(height: 2),
+          const Divider(),
+          InfoRow(label: '앱을 연 횟수', value: '${metrics.openCount}번'),
+          InfoRow(label: '전화 버튼을 누른 횟수', value: '${metrics.callTapCount}번'),
+          InfoRow(label: '알림을 눌러 들어온 횟수', value: '${metrics.pushOpenCount}번'),
         ],
       ),
     );
