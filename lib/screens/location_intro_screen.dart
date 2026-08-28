@@ -32,7 +32,7 @@ class _LocationIntroScreenState extends State<LocationIntroScreen> {
       code = deps.regionLocator.locate(position.latitude, position.longitude);
     }
     if (!mounted) return;
-    if (code != null) await deps.settings.setRegionCode(code);
+    if (code != null) await deps.settings.setRegionCode(code, fromGps: true);
     await deps.settings.setOnboarded(true);
     if (!mounted) return;
     navigator.pushReplacement(

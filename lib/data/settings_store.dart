@@ -7,6 +7,7 @@ class SettingsStore {
   SettingsStore._(this._prefs);
 
   static const String keyRegionCode = 'regionCode';
+  static const String keyRegionFromGps = 'regionFromGps';
   static const String keyTextScale = 'textScale';
   static const String keyNotifyOn = 'notifyOn';
   static const String keyOnboarded = 'onboarded';
@@ -17,6 +18,9 @@ class SettingsStore {
 
   late final ValueNotifier<String> regionCode = ValueNotifier(
     _prefs.getString(keyRegionCode) ?? defaultRegionCode,
+  );
+  late final ValueNotifier<bool> regionFromGps = ValueNotifier(
+    _prefs.getBool(keyRegionFromGps) ?? false,
   );
   late final ValueNotifier<double> textScale = ValueNotifier(
     _prefs.getDouble(keyTextScale) ?? 1.0,
@@ -31,9 +35,11 @@ class SettingsStore {
   static Future<SettingsStore> load() async =>
       SettingsStore._(await SharedPreferences.getInstance());
 
-  Future<void> setRegionCode(String code) async {
+  Future<void> setRegionCode(String code, {bool fromGps = false}) async {
     regionCode.value = code;
+    regionFromGps.value = fromGps;
     await _prefs.setString(keyRegionCode, code);
+    await _prefs.setBool(keyRegionFromGps, fromGps);
   }
 
   Future<void> setTextScale(double scale) async {

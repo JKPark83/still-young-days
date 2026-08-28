@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:still_young_days/screens/home_screen.dart';
 import 'package:still_young_days/screens/region_picker_screen.dart';
+import 'package:still_young_days/screens/settings_screen.dart';
 import 'package:still_young_days/widgets/big_button.dart';
 
 import '../helpers.dart';
@@ -25,6 +26,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(deps.settings.regionCode.value, '41570');
+    expect(deps.settings.regionFromGps.value, isTrue);
     expect(find.byType(RegionPickerScreen), findsNothing);
     expect(find.byType(HomeScreen), findsOneWidget);
   });
@@ -78,6 +80,38 @@ void main() {
     await tester.tap(gimpo);
     await tester.pumpAndSettle();
     expect(deps.settings.regionCode.value, '41570');
+  });
+
+  testWidgets('설정: 위치로 정한 동네엔 (내 위치)가 붙고 직접 고르면 사라진다', (tester) async {
+    usePhoneView(tester);
+    final deps = await pumpApp(
+      tester,
+      home: const SettingsScreen(),
+      prefs: {'onboarded': true, 'regionCode': '41570', 'regionFromGps': true},
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('김포시 (내 위치)'), findsOneWidget);
+
+    await tester.tap(find.textContaining('내 동네 바꾸기'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(BigButton, '경기도'));
+    await tester.pumpAndSettle();
+    final suwon = find.text('수원시');
+    await tester.scrollUntilVisible(
+      suwon,
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.ensureVisible(suwon);
+    await tester.pumpAndSettle();
+    await tester.tap(suwon);
+    await tester.pumpAndSettle();
+
+    expect(find.byType(SettingsScreen), findsOneWidget);
+    expect(deps.settings.regionCode.value, '41110');
+    expect(deps.settings.regionFromGps.value, isFalse);
+    expect(find.text('수원시'), findsOneWidget);
+    expect(find.textContaining('(내 위치)'), findsNothing);
   });
 
   testWidgets('changing region from home refreshes the feed', (tester) async {

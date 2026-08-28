@@ -47,10 +47,13 @@ class SettingsScreen extends StatelessWidget {
                   valueListenable: settings.regionCode,
                   builder: (context, code, _) => RegionName(
                     code: code,
-                    builder: (context, name) => ListRow(
-                      title: '내 동네 바꾸기',
-                      value: name,
-                      onTap: () => push(const RegionPickerScreen()),
+                    builder: (context, name) => ValueListenableBuilder<bool>(
+                      valueListenable: settings.regionFromGps,
+                      builder: (context, fromGps, _) => ListRow(
+                        title: '내 동네 바꾸기',
+                        value: fromGps ? '$name (내 위치)' : name,
+                        onTap: () => push(const RegionPickerScreen()),
+                      ),
                     ),
                   ),
                 ),
