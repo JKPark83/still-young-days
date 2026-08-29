@@ -1,3 +1,4 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 
@@ -9,9 +10,11 @@ import 'data/neighbor_repository.dart';
 import 'data/region_repository.dart';
 import 'data/remote_item_repository.dart';
 import 'data/settings_store.dart';
+import 'firebase_options.dart';
 import 'location/location_service.dart';
 import 'location/region_locator.dart';
 import 'metrics/metrics.dart';
+import 'push/push_service.dart';
 
 /// Base URL of the published `data/` folder, e.g.
 /// `https://<owner>.github.io/still-young-days-data/data/`.
@@ -36,12 +39,41 @@ Future<ItemRepository> buildItemRepository() async {
   );
 }
 
+/// [DisabledPushService] until `flutterfire configure` has replaced the
+/// placeholder values in `lib/firebase_options.dart` and `Firebase.
+/// initializeApp` succeeds — either way, push staying off must never stop
+/// the app from starting.
+Future<PushService> buildPushService({
+  required Metrics metrics,
+  required GlobalKey<NavigatorState> navigatorKey,
+}) async {
+  final options = DefaultFirebaseOptions.currentPlatform;
+  if (isPlaceholderFirebaseOptions(options)) return const DisabledPushService();
+  try {
+    await Firebase.initializeApp(options: options);
+  } on Object catch (error) {
+    debugPrint('Firebase.initializeApp failed, push stays off — $error');
+    return const DisabledPushService();
+  }
+  return FcmPushService(
+    adapter: const FirebaseFcmAdapter(),
+    metrics: metrics,
+    navigatorKey: navigatorKey,
+  );
+}
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final settings = await SettingsStore.load();
   final items = await buildItemRepository();
   final metrics = await Metrics.load();
   await metrics.incrementOpenCount();
+  final navigatorKey = GlobalKey<NavigatorState>();
+  final pushService = await buildPushService(
+    metrics: metrics,
+    navigatorKey: navigatorKey,
+  );
+  pushService.attach(settings);
   runApp(
     StillYoungApp(
       items: items,
@@ -51,6 +83,8 @@ Future<void> main() async {
       regionLocator: RegionLocator(),
       neighbors: NeighborRepository(),
       metrics: metrics,
+      pushService: pushService,
+      navigatorKey: navigatorKey,
     ),
   );
 }

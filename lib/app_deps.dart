@@ -7,6 +7,7 @@ import 'data/settings_store.dart';
 import 'location/location_service.dart';
 import 'location/region_locator.dart';
 import 'metrics/metrics.dart';
+import 'push/push_service.dart';
 import 'utils/phone_call.dart';
 
 /// Hands repositories and the settings store down the tree without a
@@ -22,6 +23,7 @@ class AppDeps extends InheritedWidget {
     required this.neighbors,
     required this.launchPhone,
     required this.metrics,
+    required this.pushService,
     this.clock = DateTime.now,
     required super.child,
   });
@@ -34,6 +36,7 @@ class AppDeps extends InheritedWidget {
   final NeighborRepository neighbors;
   final PhoneLauncher launchPhone;
   final Metrics metrics;
+  final PushService pushService;
 
   /// Current time source; tests pass a fixed value for the stale-data banner.
   final DateTime Function() clock;
