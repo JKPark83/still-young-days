@@ -17,6 +17,7 @@ import 'package:still_young_days/location/location_service.dart';
 import 'package:still_young_days/location/region_locator.dart';
 import 'package:still_young_days/metrics/metrics.dart';
 import 'package:still_young_days/models/region_item.dart';
+import 'package:still_young_days/push/push_service.dart';
 
 /// Phone-sized logical viewport (360 x 780) for every widget test.
 void usePhoneView(WidgetTester tester) {
@@ -110,6 +111,7 @@ Future<
     FakePhone phone,
     MockItemRepository items,
     Metrics metrics,
+    PushService push,
   })
 >
 pumpApp(
@@ -120,6 +122,8 @@ pumpApp(
   ItemRepository? items,
   DateTime? now,
   LocationService? location,
+  PushService? push,
+  GlobalKey<NavigatorState>? navigatorKey,
 }) async {
   // CachingAssetBundle keeps Futures bound to the previous test's FakeAsync
   // zone; a stale one never completes here and pumpAndSettle times out.
@@ -128,6 +132,9 @@ pumpApp(
   final metrics = await Metrics.load();
   final phone = FakePhone();
   final mockItems = MockItemRepository();
+  final pushService = push ?? const DisabledPushService();
+  pushService.attach(settings);
+  addTearDown(pushService.dispose);
   await tester.pumpWidget(
     MediaQuery(
       data: MediaQueryData(textScaler: TextScaler.linear(osTextScale)),
@@ -140,13 +147,21 @@ pumpApp(
         neighbors: NeighborRepository(),
         launchPhone: phone.launch,
         metrics: metrics,
+        pushService: pushService,
+        navigatorKey: navigatorKey,
         // Fixed clock: the mock feed is dated 2026-08-28, keep it "fresh".
         clock: () => now ?? DateTime.utc(2026, 8, 28, 4),
         home: home,
       ),
     ),
   );
-  return (settings: settings, phone: phone, items: mockItems, metrics: metrics);
+  return (
+    settings: settings,
+    phone: phone,
+    items: mockItems,
+    metrics: metrics,
+    push: pushService,
+  );
 }
 
 RegionItem sampleItem({

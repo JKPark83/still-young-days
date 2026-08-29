@@ -8,6 +8,7 @@ import 'data/settings_store.dart';
 import 'location/location_service.dart';
 import 'location/region_locator.dart';
 import 'metrics/metrics.dart';
+import 'push/push_service.dart';
 import 'screens/splash_screen.dart';
 import 'theme/app_theme.dart';
 import 'theme/tokens.dart';
@@ -25,8 +26,10 @@ class StillYoungApp extends StatelessWidget {
     required this.regionLocator,
     required this.neighbors,
     required this.metrics,
+    required this.pushService,
     this.launchPhone = launchPhoneCall,
     this.clock = DateTime.now,
+    this.navigatorKey,
     this.home,
   });
 
@@ -37,8 +40,13 @@ class StillYoungApp extends StatelessWidget {
   final RegionLocator regionLocator;
   final NeighborRepository neighbors;
   final Metrics metrics;
+  final PushService pushService;
   final PhoneLauncher launchPhone;
   final DateTime Function() clock;
+
+  /// Lets [PushService] navigate to the home screen from a notification tap
+  /// without a `BuildContext`. Optional — most tests don't need it.
+  final GlobalKey<NavigatorState>? navigatorKey;
 
   /// Test hook: start on any screen instead of the splash.
   final Widget? home;
@@ -54,10 +62,12 @@ class StillYoungApp extends StatelessWidget {
       neighbors: neighbors,
       launchPhone: launchPhone,
       metrics: metrics,
+      pushService: pushService,
       clock: clock,
       child: MaterialApp(
         title: '오늘도청춘',
         debugShowCheckedModeBanner: false,
+        navigatorKey: navigatorKey,
         theme: buildAppTheme(),
         builder: (context, child) => ValueListenableBuilder<double>(
           valueListenable: settings.textScale,
